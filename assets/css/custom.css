@@ -215,6 +215,110 @@ a:not(.btn):not(.tab):not(.menu li > *):hover {
   border-right: 1px solid hsl(var(--b3) / 0.5);
 }
 
+/* ─── Gradient utility OVERRIDE (Tailwind CDN compile gagal dengan custom
+   HSL CSS vars — terbukti dari screenshot: icon containers render putih
+   tanpa fill). Pakai attribute selector untuk match all combinations
+   regardless of class order, dengan !important untuk override Tailwind
+   broken --tw-gradient-from values. */
+
+/* Diagonal br (135deg) variants */
+[class*="bg-gradient-to-br"][class*="from-primary"][class*="to-secondary"] {
+  background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%) !important;
+  color: white;
+}
+[class*="bg-gradient-to-br"][class*="from-primary"][class*="to-primary/80"] {
+  background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--p) / 0.85) 100%) !important;
+  color: white;
+}
+[class*="bg-gradient-to-br"][class*="from-primary/5"][class*="to-base-200"] {
+  background: linear-gradient(135deg, hsl(var(--p) / 0.06) 0%, hsl(var(--b2)) 100%) !important;
+}
+[class*="bg-gradient-to-br"][class*="from-primary/10"][class*="to-base-200"] {
+  background: linear-gradient(135deg, hsl(var(--p) / 0.10) 0%, hsl(var(--b2)) 100%) !important;
+}
+[class*="bg-gradient-to-br"][class*="from-primary/5"][class*="via-base-100"][class*="to-secondary/5"] {
+  background: linear-gradient(135deg, hsl(var(--p) / 0.06) 0%, hsl(var(--b1)) 50%, hsl(var(--s) / 0.06) 100%) !important;
+}
+[class*="bg-gradient-to-br"][class*="from-base-200"][class*="to-base-300"] {
+  background: linear-gradient(135deg, hsl(var(--b2)) 0%, hsl(var(--b3)) 100%) !important;
+}
+[class*="bg-gradient-to-br"][class*="from-neutral"][class*="to-neutral-focus"] {
+  background: linear-gradient(135deg, hsl(var(--n)) 0%, hsl(var(--nf)) 100%) !important;
+  color: white;
+}
+
+/* Horizontal r (90deg) variants */
+[class*="bg-gradient-to-r"][class*="from-primary"][class*="to-secondary"] {
+  background: linear-gradient(90deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%) !important;
+}
+[class*="bg-gradient-to-r"][class*="from-primary/5"][class*="to-transparent"] {
+  background: linear-gradient(90deg, hsl(var(--p) / 0.06) 0%, transparent 100%) !important;
+}
+
+/* Single-color "via" backgrounds (di landing) */
+[class*="bg-gradient-to-br"][class*="from-primary/5"][class*="via-base-200"][class*="to-base-200"] {
+  background: linear-gradient(135deg, hsl(var(--p) / 0.06) 0%, hsl(var(--b2)) 50%, hsl(var(--b2)) 100%) !important;
+}
+
+/* ── Explicit utility classes (untuk komponen baru) ──────────── */
+.icon-grad-purple {
+  background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
+}
+.icon-grad-purple-soft {
+  background: linear-gradient(135deg, #B19CD8 0%, #8F99FB 100%);
+}
+.icon-grad-blue {
+  background: linear-gradient(135deg, hsl(var(--a)) 0%, hsl(var(--p)) 100%);
+}
+.bg-hero {
+  background: linear-gradient(135deg,
+    hsl(var(--p) / 0.06) 0%,
+    hsl(var(--b1)) 35%,
+    hsl(var(--s) / 0.06) 100%);
+}
+.bg-page-grad {
+  background: linear-gradient(180deg, hsl(var(--b1)) 0%, hsl(var(--b2)) 100%);
+}
+
+/* ── Track switcher kontras — bg solid soft purple, no opacity tricks ── */
+.track-switcher-btn {
+  background: hsl(var(--b3));
+  border: 1px solid hsl(var(--p) / 0.3);
+  color: hsl(var(--bc));
+}
+.track-switcher-btn:hover {
+  background: hsl(var(--b3) / 0.7);
+  border-color: hsl(var(--p) / 0.5);
+}
+
+/* ── Progress ring lebih visible — gunakan stroke explicit  ─────── */
+#progress-ring {
+  stroke: hsl(var(--p));
+  stroke-width: 8;
+}
+.text-base-200 { /* override fallback untuk svg circle bg */
+  color: hsl(var(--b3));
+}
+
+/* ── Reading progress bar warna eksplisit ────────────────────────── */
+#reading-progress-fill {
+  background: linear-gradient(90deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
+}
+
+/* ── Hero icon container — fallback solid bg + gradient ────────── */
+.hero-icon-box {
+  background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
+  color: white;
+  box-shadow: 0 8px 24px hsl(var(--p) / 0.25);
+}
+
+/* ── Brand icon container (sidebar header) ──────────────────────── */
+.brand-icon-box {
+  background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
+  color: white;
+  box-shadow: 0 4px 12px hsl(var(--p) / 0.2);
+}
+
 /* Hero & gradient sections lebih dramatic */
 .bg-grad-purple { background: var(--bg-grad-purple); }
 .bg-grad-purple-soft { background: var(--bg-grad-purple-soft); }
