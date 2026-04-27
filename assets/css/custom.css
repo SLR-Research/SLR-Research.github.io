@@ -3,39 +3,42 @@
    Modern Learning Platform Design — Pastel Purple Theme
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── DaisyUI Theme Override: Pastel Purple Palette ───────────────
-   primary    : Cool Purple   #B19CD8
-   secondary  : Periwinkle    #ADB4FF
-   accent     : Light Blue    #A8D8E8
+/* ── DaisyUI Theme Override: Pastel Purple + Periwinkle/Blue Palette ──
+   primary    : Cool Purple      #B19CD8
+   secondary  : Periwinkle Blue  #8F99FB  (saturated periwinkle)
+   accent     : Pastel Blue      #A7C7E7
    base-100   : white
-   base-200   : Sweet Purple  #E6D1F2
-   base-300   : Soft Purple   #D9C4EC
-   info       : Light Blue    #A8D8E8
+   base-200   : Sweet Purple     #E6D1F2  (subtle bg tint)
+   base-300   : Light Periwinkle #C1C6FC  (border/divider)
+   info       : Powder Blue      #B6D0E2
+   success    : soft green
+   warning    : soft amber
+   error      : soft coral
 */
 [data-theme="light"] {
   --p:   265 43% 73%;       /* primary       Cool Purple #B19CD8 */
-  --pf:  265 43% 60%;       /* primary focus  */
-  --pc:  265 50% 18%;       /* primary content (dark text on primary bg) */
+  --pf:  265 43% 60%;
+  --pc:  265 50% 18%;
 
-  --s:   234 100% 84%;      /* secondary     Periwinkle #ADB4FF */
-  --sf:  234 70% 70%;
-  --sc:  234 50% 18%;
+  --s:   234 95% 78%;       /* secondary     Periwinkle Blue #8F99FB */
+  --sf:  234 80% 65%;
+  --sc:  234 60% 18%;
 
-  --a:   195 53% 79%;       /* accent        Light Blue #A8D8E8 */
-  --af:  195 53% 65%;
-  --ac:  195 50% 18%;
+  --a:   207 56% 78%;       /* accent        Pastel Blue #A7C7E7 */
+  --af:  207 56% 65%;
+  --ac:  207 50% 18%;
 
   --n:   265 30% 30%;       /* neutral (purple-tinted gray) */
   --nf:  265 30% 22%;
   --nc:  265 20% 95%;
 
   --b1:  0   0%   100%;     /* base-100  pure white */
-  --b2:  283 60% 95%;       /* base-200  Sweet Purple very light */
-  --b3:  281 50% 90%;       /* base-300  Soft Purple */
+  --b2:  283 60% 95%;       /* base-200  Sweet Purple very light  #E6D1F2 tinted lighter */
+  --b3:  235 92% 92%;       /* base-300  Light Periwinkle #C1C6FC tinted lighter */
   --bc:  265 30% 22%;       /* base content text */
 
-  --in:  195 53% 79%;       /* info  Light Blue */
-  --inc: 195 50% 18%;
+  --in:  207 47% 80%;       /* info       Powder Blue #B6D0E2 */
+  --inc: 207 50% 18%;
   --su:  152 50% 65%;       /* success soft green */
   --suc: 152 50% 18%;
   --wa:  39  90% 73%;       /* warning soft orange */
@@ -55,19 +58,19 @@
   --tab-radius: 0.5rem;
 }
 
-/* Dark mode: deeper purple, still soft */
+/* Dark mode: deeper purple/periwinkle, still soft */
 [data-theme="dark"] {
   --p:   265 43% 65%;
   --pf:  265 43% 55%;
   --pc:  265 80% 95%;
 
-  --s:   234 60% 65%;
-  --sf:  234 60% 55%;
+  --s:   234 70% 60%;
+  --sf:  234 70% 50%;
   --sc:  234 80% 95%;
 
-  --a:   195 53% 60%;
-  --af:  195 53% 50%;
-  --ac:  195 80% 95%;
+  --a:   207 50% 55%;
+  --af:  207 50% 45%;
+  --ac:  207 80% 95%;
 
   --n:   265 25% 20%;
   --nf:  265 25% 15%;
@@ -78,8 +81,8 @@
   --b3:  265 25% 22%;
   --bc:  265 30% 90%;
 
-  --in:  195 53% 60%;
-  --inc: 195 80% 95%;
+  --in:  207 50% 55%;
+  --inc: 207 80% 95%;
   --su:  152 50% 55%;
   --suc: 152 80% 95%;
   --wa:  39  90% 65%;
@@ -104,8 +107,10 @@
   --grad-purple-soft:    #CCB7E5;
   --grad-purple-light:   #D9C4EC;
   --grad-purple-mist:    #E6D1F2;
-  --grad-periwinkle:     #ADB4FF;
-  --grad-lightblue:      #A8D8E8;
+  --grad-periwinkle:     #8F99FB;  /* Periwinkle Blue */
+  --grad-periwinkle-lt:  #C1C6FC;  /* Light Periwinkle */
+  --grad-pastelblue:     #A7C7E7;  /* Pastel Blue */
+  --grad-powderblue:     #B6D0E2;  /* Powder Blue */
 
   /* Reusable gradient backgrounds */
   --bg-grad-purple: linear-gradient(135deg,
@@ -118,7 +123,10 @@
     var(--grad-purple-light) 100%);
   --bg-grad-purple-blue: linear-gradient(135deg,
     var(--grad-purple-mist) 0%,
-    var(--grad-lightblue) 100%);
+    var(--grad-pastelblue) 100%);
+  --bg-grad-periwinkle: linear-gradient(135deg,
+    var(--grad-periwinkle-lt) 0%,
+    var(--grad-periwinkle) 100%);
 
   /* Semantic colors for prose (light mode) */
   --prose-border: #e6d1f2;
