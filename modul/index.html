@@ -463,6 +463,9 @@ async function loadHomeAndContent() {
   document.getElementById("reading-time").textContent = Math.max(1, Math.round(wc / 200)) + " menit baca";
   if (window.hljs) hljs.highlightAll();
 
+  // Add copy button ke setiap code block (port dari webapp/static/js/app.js CodeCopyManager).
+  enhanceCodeBlocks(article);
+
   // TOC build
   buildTOC(article);
 
@@ -485,26 +488,148 @@ async function loadHomeAndContent() {
   }
 }
 
+// Toast notifier untuk action feedback (copy, complete, dll).
+function toast(msg, type) {
+  type = type || "success";
+  let container = document.getElementById("toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    container.className = "toast toast-top toast-end z-50";
+    document.body.appendChild(container);
+  }
+  const div = document.createElement("div");
+  div.className = "alert alert-" + type;
+  const span = document.createElement("span");
+  span.textContent = msg;
+  div.appendChild(span);
+  container.appendChild(div);
+  setTimeout(() => div.remove(), 2500);
+}
+
+// enhanceCodeBlocks: add copy button ke setiap <pre> dalam article.
+// Port behavior dari webapp/static/js/app.js CodeCopyManager.
+function enhanceCodeBlocks(article) {
+  const COPY_ICON = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline-block" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>';
+  const CHECK_ICON = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
+
+  article.querySelectorAll("pre").forEach((pre) => {
+    pre.classList.add("relative", "group");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-xs btn-ghost absolute top-2 right-2 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200 copy-btn";
+    btn.setAttribute("aria-label", "Copy");
+    btn.innerHTML = COPY_ICON + '<span class="ml-1">Copy</span>';
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const code = pre.querySelector("code");
+      const text = (code && code.textContent) || pre.textContent;
+      const ok = await copyToClipboard(text);
+      if (ok) {
+        const orig = btn.innerHTML;
+        btn.innerHTML = CHECK_ICON + '<span class="ml-1">Tersalin!</span>';
+        btn.classList.add("btn-success");
+        toast("Kode berhasil disalin!", "success");
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.classList.remove("btn-success");
+        }, 2000);
+      } else {
+        toast("Gagal menyalin kode", "error");
+      }
+    });
+    pre.appendChild(btn);
+  });
+}
+
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (_) { /* fall through to legacy */ }
+  // Fallback: hidden textarea + execCommand (works on http/older browsers).
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;opacity:0;left:-9999px;";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return ok;
+  } catch (_) {
+    return false;
+  }
+}
+
 function buildTOC(article) {
   const headings = article.querySelectorAll("h2, h3");
-  const tocs = [document.getElementById("toc-nav"), document.getElementById("toc-nav-mobile")];
+  const tocs = [document.getElementById("toc-nav"), document.getElementById("toc-nav-mobile")].filter(Boolean);
   if (headings.length === 0) {
-    tocs.forEach((t) => { if (t) t.innerHTML = '<p class="text-xs opacity-50">Tidak ada heading</p>'; });
+    tocs.forEach((t) => { t.innerHTML = '<p class="text-xs opacity-50">Tidak ada heading</p>'; });
     return;
   }
+
+  // Generate unique IDs for headings (slugify from text).
+  const usedIds = new Set();
+  headings.forEach((h, i) => {
+    if (!h.id) {
+      let base = (h.textContent || "h-" + i).toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .substring(0, 50) || ("h-" + i);
+      let id = base, n = 1;
+      while (usedIds.has(id)) { id = base + "-" + (n++); }
+      usedIds.add(id);
+      h.id = id;
+    } else {
+      usedIds.add(h.id);
+    }
+  });
+
+  // Render TOC links + setup smooth-scroll on click.
   tocs.forEach((toc) => {
-    if (!toc) return;
     toc.innerHTML = "";
-    headings.forEach((h, i) => {
-      if (!h.id) h.id = "h-" + i;
+    headings.forEach((h) => {
       const a = document.createElement("a");
       a.href = "#" + h.id;
+      a.dataset.target = h.id;
       const indent = h.tagName === "H3" ? "pl-6" : "pl-3";
-      a.className = `block ${indent} py-1.5 text-sm text-base-content/70 hover:text-primary border-l-2 border-base-200 hover:border-primary transition`;
+      a.className = `toc-link block ${indent} py-1.5 text-sm text-base-content/70 hover:text-primary border-l-2 border-base-200 hover:border-primary transition`;
       a.textContent = h.textContent;
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        h.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Close mobile TOC
+        const m = document.getElementById("toc-mobile");
+        if (m && !m.classList.contains("hidden")) {
+          m.classList.add("hidden");
+          document.getElementById("toc-chevron").style.transform = "";
+        }
+      });
       toc.appendChild(a);
     });
   });
+
+  // Scroll spy: highlight active TOC link via IntersectionObserver.
+  const setActive = (id) => {
+    document.querySelectorAll(".toc-link").forEach((l) => {
+      const isActive = l.dataset.target === id;
+      l.classList.toggle("text-primary", isActive);
+      l.classList.toggle("border-primary", isActive);
+      l.classList.toggle("font-semibold", isActive);
+    });
+  };
+  const observer = new IntersectionObserver((entries) => {
+    // Find topmost intersecting heading.
+    const visible = entries.filter((e) => e.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    if (visible.length > 0) setActive(visible[0].target.id);
+  }, { rootMargin: "-80px 0px -70% 0px", threshold: 0 });
+  headings.forEach((h) => observer.observe(h));
 }
 
 function setCompleteButton(done) {
