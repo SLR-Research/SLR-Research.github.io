@@ -1,84 +1,12 @@
 <!doctype html>
-<html lang="id" data-theme="light">
+<html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Home — SLR AI Guide</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
-  <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
+  <title>SLR AI Guide</title>
+  <meta http-equiv="refresh" content="0;url=/slr-frontend/modul/?slug=home">
+  <script>location.replace("/slr-frontend/modul/?slug=home");</script>
 </head>
-<body class="bg-base-100">
-  <header class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-30">
-    <div class="container mx-auto px-4 flex items-center justify-between">
-      <a href="/slr-frontend/home/" class="text-xl font-semibold">SLR AI Guide</a>
-      <div class="flex items-center gap-3">
-        <a href="/slr-frontend/profile/" class="btn btn-ghost btn-sm">Profil</a>
-        <a id="adminLink" href="/slr-frontend/admin/dashboard/" class="btn btn-ghost btn-sm hidden">Admin</a>
-        <span id="userName" class="text-sm opacity-70"></span>
-        <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
-      </div>
-    </div>
-  </header>
-
-  <main class="container mx-auto px-4 py-8 max-w-4xl">
-    <h1 class="text-2xl font-semibold mb-2">Daftar Modul</h1>
-    <p class="opacity-70 mb-6" id="trackLabel">—</p>
-
-    <div id="loading" class="text-center py-12 opacity-60">Memuat modul...</div>
-    <div id="modulList" class="hidden space-y-3"></div>
-    <div id="emptyState" class="hidden alert alert-info text-sm">Belum ada modul tersedia untuk jalur ini.</div>
-    <div id="errorState" class="hidden alert alert-error text-sm"></div>
-  </main>
-
-  <script src="/slr-frontend/assets/js/auth.js"></script>
-  <script src="/slr-frontend/assets/js/api.js"></script>
-  <script>
-    Auth.requireLogin();
-
-    const user = Auth.getUser() || {};
-    document.getElementById("userName").textContent = user.name || "";
-    document.getElementById("trackLabel").textContent = "Jalur: " + (user.selected_track || "(belum dipilih)");
-    if (user.role === "admin") {
-      document.getElementById("adminLink").classList.remove("hidden");
-    }
-
-    document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
-
-    (async function loadModuls() {
-      const loading = document.getElementById("loading");
-      const list = document.getElementById("modulList");
-      const empty = document.getElementById("emptyState");
-      const errBox = document.getElementById("errorState");
-      try {
-        const data = await Api.get("/home");
-        loading.classList.add("hidden");
-        const moduls = (data && data.moduls) || [];
-        if (moduls.length === 0) {
-          empty.classList.remove("hidden");
-          return;
-        }
-        list.innerHTML = moduls.map((m) => `
-          <a href="/slr-frontend/modul/?slug=${encodeURIComponent(m.slug)}" class="card bg-base-200 hover:bg-base-300 transition">
-            <div class="card-body py-4">
-              <h2 class="card-title text-base"></h2>
-              <p class="text-sm opacity-80"></p>
-            </div>
-          </a>
-        `).join("");
-        // Inject text via textContent to avoid XSS.
-        list.querySelectorAll("a").forEach((a, i) => {
-          a.querySelector("h2").textContent = moduls[i].title || moduls[i].slug;
-          a.querySelector("p").textContent = moduls[i].summary || "";
-        });
-        list.classList.remove("hidden");
-      } catch (err) {
-        loading.classList.add("hidden");
-        errBox.textContent = err.message || "Gagal memuat modul";
-        errBox.classList.remove("hidden");
-      }
-    })();
-  </script>
+<body>
+  <p>Memuat... <a href="/slr-frontend/modul/?slug=home">Klik di sini bila tidak dialihkan otomatis.</a></p>
 </body>
 </html>

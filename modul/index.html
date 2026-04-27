@@ -3,7 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Modul — SLR AI Guide</title>
+  <title>SLR AI Guide</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
 
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
@@ -11,50 +16,527 @@
   <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
 </head>
 <body class="bg-base-100">
-  <header class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-30">
-    <div class="container mx-auto px-4 flex items-center justify-between">
-      <a href="/slr-frontend/home/" class="text-sm">← Kembali ke daftar modul</a>
-      <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
+
+<!-- Reading Progress Bar -->
+<div id="reading-progress" class="fixed top-0 left-0 w-full h-1 bg-primary/20 z-50 hidden">
+  <div id="reading-progress-fill" class="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-300" style="width:0%"></div>
+</div>
+
+<div class="drawer lg:drawer-open">
+  <input id="sidebar-toggle" type="checkbox" class="drawer-toggle">
+
+  <!-- ═══════ MAIN CONTENT ═══════ -->
+  <div class="drawer-content flex flex-col min-h-screen bg-base-100">
+
+    <!-- Top Navbar (Mobile) -->
+    <header class="navbar bg-base-100 border-b border-base-200 lg:hidden sticky top-0 z-40">
+      <div class="flex-none">
+        <label for="sidebar-toggle" class="btn btn-ghost btn-circle drawer-button" aria-label="Buka menu">
+          <span class="material-symbols-outlined">menu</span>
+        </label>
+      </div>
+      <div class="flex-1">
+        <span class="font-semibold text-sm">SLR AI Guide</span>
+      </div>
+      <div class="flex-none">
+        <button id="theme-toggle-mobile" class="btn btn-ghost btn-circle" aria-label="Tema">
+          <span class="material-symbols-outlined" id="theme-icon-mobile">dark_mode</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5 border-b border-base-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-12">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+          <div class="flex-1 min-w-0">
+            <!-- Breadcrumb -->
+            <nav class="flex items-center gap-2 text-sm text-base-content/60 mb-4">
+              <a href="/slr-frontend/modul/?slug=home" class="hover:text-primary transition-colors">Beranda</a>
+              <span class="material-symbols-outlined text-base">chevron_right</span>
+              <span class="text-primary font-medium truncate" id="breadcrumb-current">Memuat...</span>
+            </nav>
+
+            <!-- Title -->
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0">
+                <div class="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
+                  <span id="hero-icon" class="material-symbols-outlined text-white" style="font-size:32px">menu_book</span>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h1 id="hero-title" class="text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight mb-2">Memuat...</h1>
+                <p id="hero-summary" class="text-base-content/70 text-sm lg:text-base max-w-2xl"></p>
+              </div>
+            </div>
+
+            <!-- Meta Info -->
+            <div class="flex flex-wrap items-center gap-3 mt-4 text-sm text-base-content/60">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base">schedule</span>
+                <span id="reading-time">— menit baca</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base">notes</span>
+                <span id="word-count">— kata</span>
+              </div>
+              <div id="completed-badge" class="hidden flex items-center gap-1.5 text-success">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Modul selesai</span>
+              </div>
+              <button onclick="window.print()" class="flex items-center gap-1.5 hover:text-primary transition-colors" aria-label="Cetak">
+                <span class="material-symbols-outlined text-base">print</span>
+                <span>Print</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Ring -->
+          <div class="flex items-center gap-4 lg:flex-col lg:items-end">
+            <div class="relative">
+              <svg class="w-20 h-20 lg:w-24 lg:h-24 transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="8" class="text-base-200"/>
+                <circle id="progress-ring" cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" class="text-primary transition-all duration-1000 ease-out" stroke-dasharray="283" stroke-dashoffset="283"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-xl lg:text-2xl font-bold" id="progress-completed">—</span>
+                <span class="text-xs text-base-content/50">/<span id="progress-total">—</span></span>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-medium">Progress Kursus</p>
+              <p class="text-xs text-base-content/60"><span id="progress-completed-text">—</span> dari <span id="progress-total-text">—</span> modul</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main + TOC -->
+    <div class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-12">
+      <div class="flex gap-8 xl:gap-12">
+
+        <!-- Article -->
+        <main class="flex-1 min-w-0">
+
+          <!-- Mobile TOC -->
+          <div class="lg:hidden mb-6">
+            <button id="toc-toggle" class="btn btn-outline btn-sm gap-2 w-full justify-between">
+              <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-base">format_list_bulleted</span>
+                Daftar Isi
+              </span>
+              <span class="material-symbols-outlined text-base" id="toc-chevron">expand_more</span>
+            </button>
+            <div id="toc-mobile" class="hidden mt-3 p-4 bg-base-200 rounded-xl">
+              <nav id="toc-nav-mobile" class="space-y-1"></nav>
+            </div>
+          </div>
+
+          <!-- Article content -->
+          <article id="modul-content" class="prose prose-lg max-w-none">
+            <p class="opacity-60">Memuat konten...</p>
+          </article>
+          <div id="errorState" class="hidden alert alert-error text-sm mt-4"></div>
+
+          <!-- Footer Nav -->
+          <footer class="mt-16 pt-8 border-t border-base-200">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <a id="prev-link" href="#" class="hidden group flex items-center gap-3 p-4 rounded-xl border border-base-200 hover:border-primary/30 hover:bg-primary/5 transition-all">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-base-200 group-hover:bg-primary/10 flex items-center justify-center">
+                  <span class="material-symbols-outlined">chevron_left</span>
+                </div>
+                <div class="text-left">
+                  <p class="text-xs text-base-content/50 uppercase tracking-wide">Sebelumnya</p>
+                  <p class="text-sm font-medium group-hover:text-primary line-clamp-1" id="prev-title">—</p>
+                </div>
+              </a>
+              <div id="prev-empty" class="hidden"></div>
+
+              <button id="btn-complete" class="btn btn-primary btn-lg gap-2 px-8 shadow-lg shadow-primary/25">
+                <span class="material-symbols-outlined" id="btn-complete-icon">check</span>
+                <span id="btn-complete-text">Tandai Selesai</span>
+              </button>
+
+              <a id="next-link" href="#" class="hidden group flex items-center gap-3 p-4 rounded-xl border border-base-200 hover:border-primary/30 hover:bg-primary/5 transition-all">
+                <div class="text-right flex-1">
+                  <p class="text-xs text-base-content/50 uppercase tracking-wide">Berikutnya</p>
+                  <p class="text-sm font-medium group-hover:text-primary line-clamp-1" id="next-title">—</p>
+                </div>
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-base-200 group-hover:bg-primary/10 flex items-center justify-center">
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </div>
+              </a>
+              <div id="next-empty" class="hidden"></div>
+            </div>
+          </footer>
+        </main>
+
+        <!-- Desktop TOC sidebar -->
+        <aside class="hidden xl:block w-64 flex-shrink-0">
+          <div class="sticky top-8">
+            <p class="text-xs font-bold text-base-content/40 uppercase tracking-wider mb-3 px-3">Daftar Isi</p>
+            <nav id="toc-nav" class="space-y-1 max-h-[calc(100vh-8rem)] overflow-y-auto"></nav>
+          </div>
+        </aside>
+      </div>
     </div>
-  </header>
+  </div>
 
-  <main class="container mx-auto px-4 py-8 max-w-3xl">
-    <div id="loading" class="text-center py-12 opacity-60">Memuat...</div>
-    <article id="modulContent" class="hidden prose prose-lg max-w-none"></article>
-    <div id="errorState" class="hidden alert alert-error text-sm"></div>
-  </main>
+  <!-- ═══════ DRAWER SIDEBAR ═══════ -->
+  <div class="drawer-side z-50">
+    <label for="sidebar-toggle" class="drawer-overlay"></label>
+    <aside class="bg-base-100 w-80 min-h-full flex flex-col shadow-2xl">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="/slr-frontend/assets/js/auth.js"></script>
-  <script src="/slr-frontend/assets/js/api.js"></script>
-  <script>
-    Auth.requireLogin();
-    document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+      <!-- Brand -->
+      <div class="p-5 border-b border-base-200 bg-gradient-to-r from-primary/5 to-transparent">
+        <a href="/slr-frontend/modul/?slug=home" class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
+            <span class="material-symbols-outlined text-white">menu_book</span>
+          </div>
+          <div>
+            <p class="font-bold text-base leading-tight">SLR AI Guide</p>
+            <p class="text-xs text-base-content/50">RPI Institute</p>
+          </div>
+        </a>
+      </div>
 
-    const slug = new URLSearchParams(window.location.search).get("slug");
-    if (!slug) {
-      window.location.href = "/slr-frontend/home/";
-    }
+      <!-- Track Switcher -->
+      <div class="px-5 py-3 border-b border-base-200">
+        <div class="dropdown dropdown-bottom w-full">
+          <label tabindex="0" class="btn btn-sm btn-block normal-case justify-between bg-primary/10 hover:bg-primary/20 border-primary/30">
+            <span class="flex items-center gap-2 min-w-0">
+              <span class="material-symbols-outlined text-primary text-base" id="track-icon">school</span>
+              <span class="truncate text-xs font-semibold" id="track-title">—</span>
+            </span>
+            <span class="material-symbols-outlined text-base">expand_more</span>
+          </label>
+          <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-72 mt-2 border border-base-200" id="track-list">
+            <li class="menu-title"><span class="text-xs">Switch Track Pembelajaran</span></li>
+          </ul>
+        </div>
+      </div>
 
-    (async function loadModul() {
-      const loading = document.getElementById("loading");
-      const content = document.getElementById("modulContent");
-      const errBox = document.getElementById("errorState");
+      <!-- Overall Progress -->
+      <div class="px-5 py-4 border-b border-base-200">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium">Progress Kursus</span>
+          <span class="text-sm font-bold text-primary" id="sidebar-percent">0%</span>
+        </div>
+        <div class="w-full bg-base-200 rounded-full h-2">
+          <div id="sidebar-progress-bar" class="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-base-content/50 mt-2"><span id="sidebar-progress-text">— dari — modul selesai</span></p>
+      </div>
+
+      <!-- User Info -->
+      <div class="px-5 py-3 border-b border-base-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="avatar placeholder">
+              <div class="bg-gradient-to-br from-neutral to-neutral-focus text-neutral-content rounded-full w-9">
+                <span class="text-sm font-bold" id="user-initials">—</span>
+              </div>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium truncate max-w-[180px]" id="user-name">—</p>
+              <p class="text-xs text-base-content/50">Peserta</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button id="theme-toggle" class="btn btn-ghost btn-sm btn-circle" title="Toggle tema">
+              <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+            </button>
+            <button id="logout-btn" class="btn btn-ghost btn-sm btn-circle" title="Keluar">
+              <span class="material-symbols-outlined">logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module Search -->
+      <div class="px-5 py-3 border-b border-base-200">
+        <div class="relative">
+          <input type="text" id="module-search" class="input input-sm input-bordered w-full pl-9" placeholder="Cari modul...">
+          <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-base-content/40 text-base">search</span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav id="sidebar-nav" class="flex-1 overflow-y-auto p-4 space-y-1"></nav>
+
+      <!-- Admin Link -->
+      <div id="admin-link-wrap" class="hidden px-4 py-3 border-t border-base-200">
+        <a href="/slr-frontend/admin/dashboard/" class="btn btn-sm btn-outline btn-primary w-full gap-2">
+          <span class="material-symbols-outlined" style="font-size:18px">admin_panel_settings</span>
+          Admin Panel
+        </a>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-4 border-t border-base-200">
+        <a href="https://rpi.institute" target="_blank" rel="noopener" class="flex items-center gap-2 text-xs text-base-content/50 hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-base">help</span>
+          <span>Bantuan & Dukungan</span>
+        </a>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="/slr-frontend/assets/js/auth.js"></script>
+<script src="/slr-frontend/assets/js/api.js"></script>
+<script>
+Auth.requireLogin();
+
+const TRACK_META = {
+  "slr": { title: "SLR AI", icon: "chat" },
+  "slr-cowork": { title: "SLR + AI Cowork", icon: "auto_awesome" },
+  "scoping": { title: "Scoping Review", icon: "explore" }
+};
+
+const slug = new URLSearchParams(location.search).get("slug") || "home";
+const user = Auth.getUser() || {};
+const track = user.selected_track || "";
+
+// ── Header user info ───────────────────────────────────
+document.getElementById("user-name").textContent = user.name || "Pengguna";
+document.getElementById("user-initials").textContent = (user.name || "?").slice(0,2).toUpperCase();
+if (user.role === "admin") document.getElementById("admin-link-wrap").classList.remove("hidden");
+
+const tm = TRACK_META[track] || { title: "—", icon: "school" };
+document.getElementById("track-title").textContent = tm.title;
+document.getElementById("track-icon").textContent = tm.icon;
+
+// Build track switcher dropdown
+(function buildTrackList() {
+  const ul = document.getElementById("track-list");
+  Object.entries(TRACK_META).forEach(([slugT, m]) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<button class="flex items-start gap-2 py-2 ${slugT === track ? 'bg-primary/10' : ''}" data-track="${slugT}">
+      <span class="material-symbols-outlined text-primary text-lg mt-0.5">${m.icon}</span>
+      <div class="flex-1 min-w-0 text-left">
+        <div class="text-sm font-medium leading-tight">${m.title}</div>
+      </div>
+      ${slugT === track ? '<span class="material-symbols-outlined text-success text-base">check</span>' : ''}
+    </button>`;
+    ul.appendChild(li);
+  });
+  ul.querySelectorAll("[data-track]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const newTrack = btn.dataset.track;
+      if (newTrack === track) return;
+      btn.style.opacity = "0.5";
       try {
-        const data = await Api.get("/modul/" + encodeURIComponent(slug));
-        loading.classList.add("hidden");
-        // Backend mengembalikan HTML hasil render markdown (server-side).
-        // Trust source: konten markdown di-curate admin, bukan user input.
-        content.innerHTML = data.html_content || "";
-        document.title = (data.title || slug) + " — SLR AI Guide";
-        content.classList.remove("hidden");
-        if (window.hljs) hljs.highlightAll();
+        await Api.post("/api/track", { track: newTrack });
+        const u = Auth.getUser() || {};
+        u.selected_track = newTrack;
+        Auth.setUser(u);
+        location.href = "/slr-frontend/modul/?slug=home";
       } catch (err) {
-        loading.classList.add("hidden");
-        errBox.textContent = err.message || "Gagal memuat modul";
-        errBox.classList.remove("hidden");
+        alert("Gagal switch track: " + (err.message || ""));
+        btn.style.opacity = "1";
       }
-    })();
-  </script>
+    });
+  });
+})();
+
+// ── Theme toggle ───────────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("slr_theme", t);
+  document.getElementById("theme-icon").textContent = t === "dark" ? "light_mode" : "dark_mode";
+  document.getElementById("theme-icon-mobile").textContent = t === "dark" ? "light_mode" : "dark_mode";
+}
+setTheme(localStorage.getItem("slr_theme") || "light");
+function toggleTheme() {
+  setTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+}
+document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+document.getElementById("theme-toggle-mobile").addEventListener("click", toggleTheme);
+
+// ── Logout ─────────────────────────────────────────────
+document.getElementById("logout-btn").addEventListener("click", () => Auth.logout());
+
+// ── Mobile TOC toggle ──────────────────────────────────
+document.getElementById("toc-toggle").addEventListener("click", () => {
+  const m = document.getElementById("toc-mobile");
+  const c = document.getElementById("toc-chevron");
+  m.classList.toggle("hidden");
+  c.style.transform = m.classList.contains("hidden") ? "" : "rotate(180deg)";
+});
+
+// ── Reading progress bar ───────────────────────────────
+window.addEventListener("scroll", () => {
+  const h = document.documentElement;
+  const scrolled = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  const bar = document.getElementById("reading-progress");
+  bar.classList.toggle("hidden", scrolled <= 0);
+  document.getElementById("reading-progress-fill").style.width = scrolled + "%";
+});
+
+// ── Build sidebar nav + load progress ──────────────────
+async function loadHomeAndContent() {
+  if (!track) {
+    location.href = "/slr-frontend/select-track/";
+    return;
+  }
+
+  const navEl = document.getElementById("sidebar-nav");
+  const errBox = document.getElementById("errorState");
+
+  let homeData, modulData;
+  try {
+    [homeData, modulData] = await Promise.all([
+      Api.get("/home"),
+      Api.get("/modul/" + encodeURIComponent(slug)),
+    ]);
+  } catch (err) {
+    errBox.textContent = "Gagal memuat: " + (err.message || "");
+    errBox.classList.remove("hidden");
+    return;
+  }
+
+  const moduls = homeData.moduls || [];
+  const completed = moduls.filter((m) => m.completed).length;
+  const total = moduls.length;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  // Sidebar progress
+  document.getElementById("sidebar-percent").textContent = pct + "%";
+  document.getElementById("sidebar-progress-bar").style.width = pct + "%";
+  document.getElementById("sidebar-progress-text").textContent = `${completed} dari ${total} modul selesai`;
+
+  // Hero progress ring
+  document.getElementById("progress-completed").textContent = completed;
+  document.getElementById("progress-total").textContent = total;
+  document.getElementById("progress-completed-text").textContent = completed;
+  document.getElementById("progress-total-text").textContent = total;
+  document.getElementById("progress-ring").style.strokeDashoffset = 283 - (283 * pct / 100);
+
+  // Sidebar nav items
+  navEl.innerHTML = "";
+  moduls.forEach((m) => {
+    const a = document.createElement("a");
+    a.href = "/slr-frontend/modul/?slug=" + encodeURIComponent(m.slug);
+    const isActive = m.slug === slug;
+    a.className = "group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all " +
+      (isActive ? "bg-primary/10 text-primary font-semibold shadow-sm" : "text-base-content/80 hover:bg-base-200");
+    a.innerHTML = `
+      <span class="material-symbols-outlined flex-shrink-0 text-xl">${escapeHtml(m.icon || 'article')}</span>
+      <span class="flex-1 truncate"></span>
+      ${m.completed ? '<span class="flex-shrink-0 w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center"><span class="material-symbols-outlined" style="font-size:14px">check</span></span>' : ''}
+    `;
+    a.querySelector("span.flex-1").textContent = m.title;
+    navEl.appendChild(a);
+  });
+
+  // Module search filter
+  document.getElementById("module-search").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    navEl.querySelectorAll("a").forEach((a) => {
+      const t = a.querySelector("span.flex-1").textContent.toLowerCase();
+      a.style.display = !q || t.includes(q) ? "" : "none";
+    });
+  });
+
+  // Hero
+  document.getElementById("breadcrumb-current").textContent = modulData.title;
+  document.getElementById("hero-title").textContent = modulData.title;
+  document.getElementById("hero-summary").textContent = modulData.summary || "";
+  document.getElementById("hero-icon").textContent = modulData.icon || "article";
+  document.title = modulData.title + " — SLR AI Guide";
+
+  const isCompleted = (moduls.find((m) => m.slug === slug) || {}).completed;
+  if (isCompleted) {
+    document.getElementById("completed-badge").classList.remove("hidden");
+    setCompleteButton(true);
+  }
+
+  // Article content + reading time
+  const article = document.getElementById("modul-content");
+  article.innerHTML = modulData.html_content || "";
+  const wc = (article.textContent.trim().match(/\S+/g) || []).length;
+  document.getElementById("word-count").textContent = wc.toLocaleString("id-ID") + " kata";
+  document.getElementById("reading-time").textContent = Math.max(1, Math.round(wc / 200)) + " menit baca";
+  if (window.hljs) hljs.highlightAll();
+
+  // TOC build
+  buildTOC(article);
+
+  // Prev/next nav
+  if (modulData.prev) {
+    const a = document.getElementById("prev-link");
+    a.href = "/slr-frontend/modul/?slug=" + encodeURIComponent(modulData.prev.slug);
+    document.getElementById("prev-title").textContent = modulData.prev.title;
+    a.classList.remove("hidden");
+  } else {
+    document.getElementById("prev-empty").classList.remove("hidden");
+  }
+  if (modulData.next) {
+    const a = document.getElementById("next-link");
+    a.href = "/slr-frontend/modul/?slug=" + encodeURIComponent(modulData.next.slug);
+    document.getElementById("next-title").textContent = modulData.next.title;
+    a.classList.remove("hidden");
+  } else {
+    document.getElementById("next-empty").classList.remove("hidden");
+  }
+}
+
+function buildTOC(article) {
+  const headings = article.querySelectorAll("h2, h3");
+  const tocs = [document.getElementById("toc-nav"), document.getElementById("toc-nav-mobile")];
+  if (headings.length === 0) {
+    tocs.forEach((t) => { if (t) t.innerHTML = '<p class="text-xs opacity-50">Tidak ada heading</p>'; });
+    return;
+  }
+  tocs.forEach((toc) => {
+    if (!toc) return;
+    toc.innerHTML = "";
+    headings.forEach((h, i) => {
+      if (!h.id) h.id = "h-" + i;
+      const a = document.createElement("a");
+      a.href = "#" + h.id;
+      const indent = h.tagName === "H3" ? "pl-6" : "pl-3";
+      a.className = `block ${indent} py-1.5 text-sm text-base-content/70 hover:text-primary border-l-2 border-base-200 hover:border-primary transition`;
+      a.textContent = h.textContent;
+      toc.appendChild(a);
+    });
+  });
+}
+
+function setCompleteButton(done) {
+  const btn = document.getElementById("btn-complete");
+  const icon = document.getElementById("btn-complete-icon");
+  const text = document.getElementById("btn-complete-text");
+  if (done) {
+    btn.classList.add("btn-disabled");
+    btn.disabled = true;
+    icon.textContent = "check_circle";
+    text.textContent = "Modul Selesai";
+  } else {
+    icon.textContent = "check";
+    text.textContent = "Tandai Selesai";
+  }
+}
+
+document.getElementById("btn-complete").addEventListener("click", async () => {
+  try {
+    await Api.post("/modul/" + encodeURIComponent(slug) + "/complete");
+    setCompleteButton(true);
+    document.getElementById("completed-badge").classList.remove("hidden");
+  } catch (err) {
+    alert("Gagal: " + (err.message || ""));
+  }
+});
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+loadHomeAndContent();
+</script>
 </body>
 </html>
