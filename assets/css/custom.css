@@ -1,12 +1,95 @@
 /* ═══════════════════════════════════════════════════════════════
    SLR AI Guide - Custom Styles
-   Modern Learning Platform Design
+   Modern Learning Platform Design — Pastel Purple Theme
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── CSS Variables ───────────────────────────────────────────── */
+/* ── DaisyUI Theme Override: Pastel Purple Palette ───────────────
+   primary    : Cool Purple   #B19CD8
+   secondary  : Periwinkle    #ADB4FF
+   accent     : Light Blue    #A8D8E8
+   base-100   : white
+   base-200   : Sweet Purple  #E6D1F2
+   base-300   : Soft Purple   #D9C4EC
+   info       : Light Blue    #A8D8E8
+*/
+[data-theme="light"] {
+  --p:   265 43% 73%;       /* primary       Cool Purple #B19CD8 */
+  --pf:  265 43% 60%;       /* primary focus  */
+  --pc:  265 50% 18%;       /* primary content (dark text on primary bg) */
+
+  --s:   234 100% 84%;      /* secondary     Periwinkle #ADB4FF */
+  --sf:  234 70% 70%;
+  --sc:  234 50% 18%;
+
+  --a:   195 53% 79%;       /* accent        Light Blue #A8D8E8 */
+  --af:  195 53% 65%;
+  --ac:  195 50% 18%;
+
+  --n:   265 30% 30%;       /* neutral (purple-tinted gray) */
+  --nf:  265 30% 22%;
+  --nc:  265 20% 95%;
+
+  --b1:  0   0%   100%;     /* base-100  pure white */
+  --b2:  283 60% 95%;       /* base-200  Sweet Purple very light */
+  --b3:  281 50% 90%;       /* base-300  Soft Purple */
+  --bc:  265 30% 22%;       /* base content text */
+
+  --in:  195 53% 79%;       /* info  Light Blue */
+  --inc: 195 50% 18%;
+  --su:  152 50% 65%;       /* success soft green */
+  --suc: 152 50% 18%;
+  --wa:  39  90% 73%;       /* warning soft orange */
+  --wac: 39  60% 18%;
+  --er:  0   75% 75%;       /* error soft red/coral */
+  --erc: 0   60% 18%;
+
+  --rounded-box: 1rem;
+  --rounded-btn: 0.625rem;
+  --rounded-badge: 1.9rem;
+  --animation-btn: 0.25s;
+  --animation-input: 0.2s;
+  --btn-text-case: none;
+  --btn-focus-scale: 0.98;
+  --border-btn: 1px;
+  --tab-border: 1px;
+  --tab-radius: 0.5rem;
+}
+
+/* Dark mode: deeper purple, still soft */
+[data-theme="dark"] {
+  --p:   265 43% 65%;
+  --pf:  265 43% 55%;
+  --pc:  265 80% 95%;
+
+  --s:   234 60% 65%;
+  --sf:  234 60% 55%;
+  --sc:  234 80% 95%;
+
+  --a:   195 53% 60%;
+  --af:  195 53% 50%;
+  --ac:  195 80% 95%;
+
+  --n:   265 25% 20%;
+  --nf:  265 25% 15%;
+  --nc:  265 30% 90%;
+
+  --b1:  265 25% 12%;       /* dark base-100 with purple tint */
+  --b2:  265 25% 16%;
+  --b3:  265 25% 22%;
+  --bc:  265 30% 90%;
+
+  --in:  195 53% 60%;
+  --inc: 195 80% 95%;
+  --su:  152 50% 55%;
+  --suc: 152 80% 95%;
+  --wa:  39  90% 65%;
+  --wac: 39  80% 18%;
+  --er:  0   70% 65%;
+  --erc: 0   80% 95%;
+}
+
 :root {
   --content-max-width: 768px;
-  /* GitBook-style font stack */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'Roboto Mono', 'Monaco', 'Courier New', 'Courier', monospace;
@@ -15,25 +98,58 @@
   --color-primary: hsl(var(--p));
   --color-primary-content: hsl(var(--pc));
 
+  /* Pastel purple gradient stops (Cool → Sweet) */
+  --grad-purple-deep:    #B19CD8;
+  --grad-purple-medium:  #BEA9DF;
+  --grad-purple-soft:    #CCB7E5;
+  --grad-purple-light:   #D9C4EC;
+  --grad-purple-mist:    #E6D1F2;
+  --grad-periwinkle:     #ADB4FF;
+  --grad-lightblue:      #A8D8E8;
+
+  /* Reusable gradient backgrounds */
+  --bg-grad-purple: linear-gradient(135deg,
+    var(--grad-purple-mist) 0%,
+    var(--grad-purple-light) 35%,
+    var(--grad-purple-soft) 70%,
+    var(--grad-purple-medium) 100%);
+  --bg-grad-purple-soft: linear-gradient(135deg,
+    var(--grad-purple-mist) 0%,
+    var(--grad-purple-light) 100%);
+  --bg-grad-purple-blue: linear-gradient(135deg,
+    var(--grad-purple-mist) 0%,
+    var(--grad-lightblue) 100%);
+
   /* Semantic colors for prose (light mode) */
-  --prose-border: #e1e4e8;
-  --prose-bg-subtle: #f6f8fa;
-  --prose-code-text: #24292f;
-  --prose-link: #3b82f6;
-  --prose-bullet: #6b7280;
-  --prose-th-text: #2c3e50;
-  --prose-hint-strong: #3b82f6;
+  --prose-border: #e6d1f2;
+  --prose-bg-subtle: #faf5fe;
+  --prose-code-text: #4a3a6a;
+  --prose-link: #8b7ec0;
+  --prose-bullet: #9b8ec5;
+  --prose-th-text: #4a3a6a;
+  --prose-hint-strong: #8b7ec0;
 }
 
 [data-theme="dark"] {
   --prose-border: hsl(var(--bc) / 0.15);
   --prose-bg-subtle: hsl(var(--b2));
-  --prose-code-text: #c9d1d9;
-  --prose-link: #60a5fa;
-  --prose-bullet: #9ca3af;
-  --prose-th-text: #c9d1d9;
-  --prose-hint-strong: #60a5fa;
+  --prose-code-text: #d9c4ec;
+  --prose-link: #c8b8e8;
+  --prose-bullet: #a89cc7;
+  --prose-th-text: #e6d1f2;
+  --prose-hint-strong: #c8b8e8;
 }
+
+/* ── Body background gradient (subtle pastel) ─────────────────── */
+body {
+  background: linear-gradient(180deg, hsl(var(--b1)) 0%, hsl(var(--b2)) 100%);
+  min-height: 100vh;
+}
+
+/* Hero & gradient sections lebih dramatic */
+.bg-grad-purple { background: var(--bg-grad-purple); }
+.bg-grad-purple-soft { background: var(--bg-grad-purple-soft); }
+.bg-grad-purple-blue { background: var(--bg-grad-purple-blue); }
 
 /* ── Typography Base ─────────────────────────────────────────── */
 body {
