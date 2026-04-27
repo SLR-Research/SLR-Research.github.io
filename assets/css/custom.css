@@ -171,49 +171,15 @@ body {
   color: hsl(var(--bc));
 }
 
-/* ── A11y: visible focus ring (WCAG 2.4.7) ───────────────────────
-   DaisyUI default ring sometimes too subtle; force min 3:1 vs surface */
-*:focus-visible {
-  outline: 2px solid hsl(var(--p));
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* ── Card subtle border (1px Sweet Purple) untuk separation ────── */
-.card {
-  border: 1px solid hsl(var(--b3) / 0.6);
-}
-
-/* ── Button hover: subtle lift (UX feedback) ─────────────────── */
-.btn-primary:not(:disabled),
-.btn-secondary:not(:disabled),
-.btn-accent:not(:disabled) {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-}
-.btn-primary:not(:disabled):hover,
-.btn-secondary:not(:disabled):hover,
-.btn-accent:not(:disabled):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px hsl(var(--p) / 0.25);
-}
-
-/* ── Link readability (primary anchor + underline on hover) ───── */
-a:not(.btn):not(.tab):not(.menu li > *) {
-  color: hsl(var(--p));
-  text-decoration-color: hsl(var(--p) / 0.3);
-  transition: color 0.15s ease;
-}
-a:not(.btn):not(.tab):not(.menu li > *):hover {
-  color: hsl(var(--pf));
-  text-decoration: underline;
-  text-decoration-color: hsl(var(--p));
-}
-
-/* ── Sidebar/Drawer surface: cleaner than base-100 untuk visual depth ── */
+/* ── Drawer aside surface: cleaner background ───────────────────── */
 .drawer-side aside {
   background: hsl(var(--b1));
-  border-right: 1px solid hsl(var(--b3) / 0.5);
 }
+
+/* NOTE: removed `*:focus-visible`, `.card border`, `a:not(.btn)` global
+   overrides — too aggressive, conflicting with DaisyUI's own focus ring,
+   menu/breadcrumb styling, dan link colors. DaisyUI defaults sudah handle
+   ini dengan benar via theme tokens. */
 
 /* ─── Gradient utility OVERRIDE (Tailwind CDN compile gagal dengan custom
    HSL CSS vars — terbukti dari screenshot: icon containers render putih
