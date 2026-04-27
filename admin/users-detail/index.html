@@ -7,12 +7,12 @@
 
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
-  <link rel="stylesheet" href="/assets/css/custom.css">
+  <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
 </head>
 <body class="bg-base-100">
   <header class="navbar bg-base-100 border-b border-base-300">
     <div class="container mx-auto px-4 flex justify-between">
-      <a href="/admin/users/" class="text-sm">← Kembali ke daftar user</a>
+      <a href="/slr-frontend/admin/users/" class="text-sm">← Kembali ke daftar user</a>
       <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
     </div>
   </header>
@@ -63,15 +63,15 @@
     </div>
   </main>
 
-  <script src="/assets/js/auth.js"></script>
-  <script src="/assets/js/api.js"></script>
+  <script src="/slr-frontend/assets/js/auth.js"></script>
+  <script src="/slr-frontend/assets/js/api.js"></script>
   <script>
     Auth.requireLogin();
     document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
 
     const id = new URLSearchParams(window.location.search).get("id");
     if (!id) {
-      window.location.href = "/admin/users/";
+      window.location.href = "/slr-frontend/admin/users/";
     }
 
     const els = {

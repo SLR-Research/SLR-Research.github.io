@@ -42,7 +42,7 @@
     // di halaman protected (home, modul, admin).
     requireLogin() {
       if (!this.isLoggedIn()) {
-        window.location.href = "/login/";
+        window.location.href = "/slr-frontend/login/";
         return false;
       }
       return true;
@@ -51,7 +51,7 @@
     // requireGuest: redirect ke /home/ kalau sudah login. Pakai di /login, /register.
     requireGuest() {
       if (this.isLoggedIn()) {
-        window.location.href = "/home/";
+        window.location.href = "/slr-frontend/home/";
         return false;
       }
       return true;
@@ -60,7 +60,7 @@
     async logout() {
       try { await window.Api.post("/logout"); } catch (_) { /* best-effort */ }
       this.clear();
-      window.location.href = "/login/";
+      window.location.href = "/slr-frontend/login/";
     },
   };
 

@@ -8,12 +8,12 @@
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/custom.css">
+  <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
 </head>
 <body class="bg-base-100">
   <header class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-30">
     <div class="container mx-auto px-4 flex items-center justify-between">
-      <a href="/home/" class="text-sm">← Kembali ke daftar modul</a>
+      <a href="/slr-frontend/home/" class="text-sm">← Kembali ke daftar modul</a>
       <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
     </div>
   </header>
@@ -25,15 +25,15 @@
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="/assets/js/auth.js"></script>
-  <script src="/assets/js/api.js"></script>
+  <script src="/slr-frontend/assets/js/auth.js"></script>
+  <script src="/slr-frontend/assets/js/api.js"></script>
   <script>
     Auth.requireLogin();
     document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
 
     const slug = new URLSearchParams(window.location.search).get("slug");
     if (!slug) {
-      window.location.href = "/home/";
+      window.location.href = "/slr-frontend/home/";
     }
 
     (async function loadModul() {

@@ -7,15 +7,15 @@
 
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
-  <link rel="stylesheet" href="/assets/css/custom.css">
+  <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
 </head>
 <body class="bg-base-100">
   <header class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-30">
     <div class="container mx-auto px-4 flex items-center justify-between">
-      <a href="/home/" class="text-xl font-semibold">SLR AI Guide</a>
+      <a href="/slr-frontend/home/" class="text-xl font-semibold">SLR AI Guide</a>
       <div class="flex items-center gap-3">
-        <a href="/profile/" class="btn btn-ghost btn-sm">Profil</a>
-        <a id="adminLink" href="/admin/dashboard/" class="btn btn-ghost btn-sm hidden">Admin</a>
+        <a href="/slr-frontend/profile/" class="btn btn-ghost btn-sm">Profil</a>
+        <a id="adminLink" href="/slr-frontend/admin/dashboard/" class="btn btn-ghost btn-sm hidden">Admin</a>
         <span id="userName" class="text-sm opacity-70"></span>
         <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
       </div>
@@ -32,8 +32,8 @@
     <div id="errorState" class="hidden alert alert-error text-sm"></div>
   </main>
 
-  <script src="/assets/js/auth.js"></script>
-  <script src="/assets/js/api.js"></script>
+  <script src="/slr-frontend/assets/js/auth.js"></script>
+  <script src="/slr-frontend/assets/js/api.js"></script>
   <script>
     Auth.requireLogin();
 
@@ -60,7 +60,7 @@
           return;
         }
         list.innerHTML = moduls.map((m) => `
-          <a href="/modul/?slug=${encodeURIComponent(m.slug)}" class="card bg-base-200 hover:bg-base-300 transition">
+          <a href="/slr-frontend/modul/?slug=${encodeURIComponent(m.slug)}" class="card bg-base-200 hover:bg-base-300 transition">
             <div class="card-body py-4">
               <h2 class="card-title text-base"></h2>
               <p class="text-sm opacity-80"></p>
