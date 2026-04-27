@@ -65,6 +65,9 @@
         <button type="submit" id="submitBtn" class="btn btn-primary w-full mt-2">Buat Akun</button>
       </form>
 
+      <div class="divider text-xs">atau daftar dengan</div>
+      <div id="googleSignIn" class="flex justify-center"></div>
+
       <div class="divider text-xs">Sudah punya akun?</div>
 
       <a href="/login/" class="btn btn-outline w-full">Login</a>
@@ -72,6 +75,9 @@
   </div>
 </div>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script src="/assets/js/config.js"></script>
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script>
@@ -86,6 +92,32 @@ function showError(msg) {
   errMsg.textContent = msg;
   errAlert.classList.remove("hidden");
 }
+
+// Google SSO init (sama logic dengan login page).
+function initGoogleSSO() {
+  const clientId = window.GOOGLE_CLIENT_ID;
+  if (!clientId || !window.google || !google.accounts) return;
+  google.accounts.id.initialize({
+    client_id: clientId,
+    callback: async (response) => {
+      errAlert.classList.add("hidden");
+      try {
+        const data = await Api.post("/auth/google", { id_token: response.credential });
+        if (data && data.token) {
+          Auth.setToken(data.token);
+          if (data.user) Auth.setUser(data.user);
+          location.href = data.redirect || "/select-track/";
+        } else { showError("Response Google login tidak valid"); }
+      } catch (err) { showError(err.message || "Google login gagal"); }
+    },
+  });
+  google.accounts.id.renderButton(document.getElementById("googleSignIn"), {
+    theme: "outline", size: "large", shape: "rectangular", width: 320, text: "signup_with",
+  });
+}
+const _gisInterval = setInterval(() => {
+  if (window.google && google.accounts) { clearInterval(_gisInterval); initGoogleSSO(); }
+}, 100);
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
