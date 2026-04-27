@@ -184,6 +184,24 @@ body {
   background: oklch(var(--b1));
 }
 
+/* ── Logo dark-mode adaptation ─────────────────────────────────────
+   Logo brand RPI di-design untuk light bg. Di dark mode:
+   brightness(0) → semua jadi black silhouette
+   invert(1)     → flip ke white silhouette
+   Hasil: logo jadi pure white di dark mode, shape preserved, warna asli
+   tidak terbaca tapi minimum readable. */
+[data-theme="dark"] img[src$="logo-rpi.png"] {
+  filter: brightness(0) invert(1);
+}
+
+/* Optional: kalau user system pakai dark mode + tema mengikuti
+   (data-theme tidak set), apply filter juga */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) img[src$="logo-rpi.png"] {
+    filter: brightness(0) invert(1);
+  }
+}
+
 /* NOTE: removed `*:focus-visible`, `.card border`, `a:not(.btn)` global
    overrides — too aggressive, conflicting with DaisyUI's own focus ring,
    menu/breadcrumb styling, dan link colors. DaisyUI defaults sudah handle
