@@ -172,7 +172,7 @@
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script>
-Auth.requireLogin();
+Auth.requireProfile();
 const u = Auth.getUser() || {};
 document.getElementById("userName").textContent = u.name || "—";
 document.getElementById("userInitials").textContent = (u.name || "?").slice(0,2).toUpperCase();

@@ -48,15 +48,35 @@
       return true;
     },
 
-    // requireGuest: redirect ke /modul/?slug=home kalau sudah login. Pakai di /login, /register.
-    requireGuest() {
-      if (this.isLoggedIn()) {
-        const u = this.getUser();
-        const dest = (u && u.selected_track) ? "/modul/?slug=home" : "/select-track/";
-        window.location.href = dest;
+    // requireProfile: chain after requireLogin. Kalau affiliation empty,
+    // redirect ke /profile-complete/. Pakai di /select-track/, /modul/, /admin/.
+    requireProfile() {
+      if (!this.requireLogin()) return false;
+      const u = this.getUser() || {};
+      if (!u.affiliation || u.affiliation.trim().length < 2) {
+        window.location.href = "/profile-complete/";
         return false;
       }
       return true;
+    },
+
+    // requireGuest: redirect ke flow yang sesuai kalau sudah login.
+    // Order: profile-complete (kalau no affiliation) → select-track (kalau no track) → modul home
+    requireGuest() {
+      if (this.isLoggedIn()) {
+        window.location.href = this.nextDest();
+        return false;
+      }
+      return true;
+    },
+
+    // nextDest: tentukan halaman tujuan berdasarkan kelengkapan profil.
+    // Dipakai setelah login/register/SSO success.
+    nextDest() {
+      const u = this.getUser() || {};
+      if (!u.affiliation || u.affiliation.trim().length < 2) return "/profile-complete/";
+      if (!u.selected_track) return "/select-track/";
+      return "/modul/?slug=home";
     },
 
     async logout() {

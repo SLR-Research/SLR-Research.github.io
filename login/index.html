@@ -104,7 +104,7 @@ function initGoogleSSO() {
         if (data && data.token) {
           Auth.setToken(data.token);
           if (data.user) Auth.setUser(data.user);
-          location.href = data.redirect || "/modul/?slug=home";
+          location.href = Auth.nextDest();
         } else { showError("Response Google login tidak valid"); }
       } catch (err) { showError(err.message || "Google login gagal"); }
     },
@@ -133,8 +133,7 @@ form.addEventListener("submit", async (e) => {
     if (res && res.token) {
       Auth.setToken(res.token);
       if (res.user) Auth.setUser(res.user);
-      const dest = (res.user && res.user.selected_track) ? "/modul/?slug=home" : "/select-track/";
-      location.href = dest;
+      location.href = Auth.nextDest();
     } else {
       showError("Response tidak valid dari server");
     }

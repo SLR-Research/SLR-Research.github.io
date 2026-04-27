@@ -47,9 +47,9 @@
         </div>
 
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Afiliasi / Institusi</span></label>
-          <input type="text" name="affiliation" placeholder="Universitas Indonesia" class="input input-bordered w-full" autocomplete="organization">
-          <label class="label"><span class="label-text-alt text-base-content/50">Opsional — Nama universitas atau institusi Anda</span></label>
+          <label class="label"><span class="label-text font-medium">Afiliasi / Institusi <span class="text-error">*</span></span></label>
+          <input type="text" name="affiliation" placeholder="Universitas Indonesia" class="input input-bordered w-full" required minlength="2" autocomplete="organization">
+          <label class="label"><span class="label-text-alt text-base-content/50">Wajib — Nama universitas atau institusi Anda</span></label>
         </div>
 
         <div class="form-control">
@@ -106,7 +106,7 @@ function initGoogleSSO() {
         if (data && data.token) {
           Auth.setToken(data.token);
           if (data.user) Auth.setUser(data.user);
-          location.href = data.redirect || "/select-track/";
+          location.href = Auth.nextDest();
         } else { showError("Response Google login tidak valid"); }
       } catch (err) { showError(err.message || "Google login gagal"); }
     },
@@ -139,7 +139,7 @@ form.addEventListener("submit", async (e) => {
     if (res && res.token) {
       Auth.setToken(res.token);
       if (res.user) Auth.setUser(res.user);
-      location.href = "/select-track/";
+      location.href = Auth.nextDest();
     } else {
       showError("Response tidak valid dari server");
     }

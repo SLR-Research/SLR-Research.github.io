@@ -55,7 +55,7 @@
   <script src="/assets/js/auth.js"></script>
   <script src="/assets/js/api.js"></script>
   <script>
-    Auth.requireLogin();
+    Auth.requireProfile();
     document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
 
     function fmtDate(s) {

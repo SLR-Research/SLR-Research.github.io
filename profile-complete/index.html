@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lengkapi Profil — SLR AI Guide</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23B19CD8%27 stroke-width=%272%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253%27/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-200">
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-base-200 p-4">
+  <div class="card w-full max-w-md bg-base-100 shadow-xl">
+    <div class="card-body">
+
+      <div class="text-center mb-6">
+        <img src="/assets/images/logo-rpi.png" alt="RPI Institute" class="h-12 w-auto mx-auto mb-3">
+        <h1 class="text-xl font-bold">Lengkapi Profil</h1>
+        <p class="text-base-content/60 text-sm mt-1">Sebelum lanjut, lengkapi data afiliasi Anda</p>
+      </div>
+
+      <div id="errorAlert" class="hidden alert alert-error mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span id="errorMsg"></span>
+      </div>
+
+      <form id="profileForm" class="space-y-4" novalidate>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Nama Lengkap</span></label>
+          <input type="text" name="name" id="nameInput" class="input input-bordered w-full" required minlength="2" autocomplete="name">
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Afiliasi / Institusi <span class="text-error">*</span></span></label>
+          <input type="text" name="affiliation" id="affInput" placeholder="Universitas Indonesia" class="input input-bordered w-full" required minlength="2" autofocus autocomplete="organization">
+          <label class="label"><span class="label-text-alt text-base-content/50">Nama universitas atau institusi Anda</span></label>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-full mt-2">Simpan & Lanjut</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/api.js"></script>
+<script>
+Auth.requireLogin();
+
+// Pre-fill form dari user data existing.
+const user = Auth.getUser() || {};
+document.getElementById("nameInput").value = user.name || "";
+document.getElementById("affInput").value = user.affiliation || "";
+
+// Kalau affiliation sudah terisi (>=2 chars), tidak perlu disini — redirect ke flow berikutnya.
+if (user.affiliation && user.affiliation.trim().length >= 2) {
+  location.href = user.selected_track ? "/modul/?slug=home" : "/select-track/";
+}
+
+const form = document.getElementById("profileForm");
+const errAlert = document.getElementById("errorAlert");
+const errMsg = document.getElementById("errorMsg");
+const submitBtn = document.getElementById("submitBtn");
+
+function showError(msg) { errMsg.textContent = msg; errAlert.classList.remove("hidden"); }
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errAlert.classList.add("hidden");
+  const fd = new FormData(form);
+  const aff = (fd.get("affiliation") || "").trim();
+  if (aff.length < 2) { showError("Afiliasi wajib diisi minimal 2 karakter"); return; }
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Menyimpan...';
+  try {
+    const res = await Api.post("/me/profile", {
+      name: (fd.get("name") || "").trim(),
+      affiliation: aff,
+    });
+    if (res && res.user) {
+      Auth.setUser(res.user);
+      location.href = res.user.selected_track ? "/modul/?slug=home" : "/select-track/";
+    } else {
+      showError("Response server tidak valid");
+    }
+  } catch (err) {
+    showError(err.message || "Gagal menyimpan profil");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Simpan & Lanjut";
+  }
+});
+</script>
+</body>
+</html>
