@@ -67,7 +67,7 @@
           Auth.setToken(res.token);
           if (res.user) Auth.setUser(res.user);
           // Redirect: kalau belum pilih track → /select-track/, else /home/
-          const dest = (res.user && res.user.selected_track) ? "/home/" : "/select-track/";
+          const dest = (res.user && res.user.selected_track) ? "/slr-frontend/home/" : "/slr-frontend/select-track/";
           window.location.href = dest;
         } else {
           showError("Response tidak valid dari server");

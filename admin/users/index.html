@@ -79,7 +79,7 @@
           const u = users[i];
           const link = tr.querySelector("[data-id]");
           link.textContent = u.name || "(no name)";
-          link.href = "/admin/users-detail/?id=" + encodeURIComponent(u.id);
+          link.href = "/slr-frontend/admin/users-detail/?id=" + encodeURIComponent(u.id);
           tr.querySelector("[data-email]").textContent = u.email;
           tr.querySelector("[data-track]").textContent = u.selected_track || "—";
           tr.querySelector("[data-role]").textContent = u.role;
