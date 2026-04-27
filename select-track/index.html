@@ -12,7 +12,7 @@
 
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
-  <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
+  <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body class="bg-base-200">
 
@@ -21,7 +21,7 @@
   <!-- Mini Navbar -->
   <nav class="navbar bg-base-100 border-b border-base-200 sticky top-0 z-40">
     <div class="flex-1 px-4">
-      <a href="/slr-frontend/" class="flex items-center gap-2">
+      <a href="/" class="flex items-center gap-2">
         <span class="material-symbols-outlined text-primary">menu_book</span>
         <span class="font-bold">SLR AI Guide</span>
       </a>
@@ -71,8 +71,8 @@
 <!-- Toast container -->
 <div class="toast toast-top toast-end" id="toast-container"></div>
 
-<script src="/slr-frontend/assets/js/auth.js"></script>
-<script src="/slr-frontend/assets/js/api.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/api.js"></script>
 <script>
 Auth.requireLogin();
 
@@ -141,7 +141,7 @@ function showToast(msg, type) {
         </div>
         <div class="card-actions justify-end mt-4">
           ${isActive
-            ? `<a href="/slr-frontend/modul/?slug=home" class="btn btn-success btn-block"><span class="material-symbols-outlined text-sm">arrow_forward</span> Lanjutkan</a>`
+            ? `<a href="/modul/?slug=home" class="btn btn-success btn-block"><span class="material-symbols-outlined text-sm">arrow_forward</span> Lanjutkan</a>`
             : `<button class="btn btn-${accent} btn-block" data-track="${t.slug}"><span class="material-symbols-outlined text-sm">${currentTrack ? 'swap_horiz' : 'rocket_launch'}</span> ${currentTrack ? 'Switch ke Track Ini' : 'Mulai Track Ini'}</button>`}
         </div>
       </div>`;
@@ -167,7 +167,7 @@ function showToast(msg, type) {
         u.selected_track = track;
         Auth.setUser(u);
         showToast("Track berhasil " + (currentTrack ? "di-switch" : "dipilih") + ". Mengalihkan...", "success");
-        setTimeout(() => { location.href = "/slr-frontend/modul/?slug=home"; }, 800);
+        setTimeout(() => { location.href = "/modul/?slug=home"; }, 800);
       } catch (err) {
         btn.disabled = false;
         btn.innerHTML = '<span class="material-symbols-outlined text-sm">error</span> Coba lagi';

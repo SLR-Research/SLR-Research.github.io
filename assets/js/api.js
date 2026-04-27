@@ -36,7 +36,7 @@
       if (res.status === 401 && window.Auth) {
         window.Auth.clear();
         if (!path.startsWith("/login") && !path.startsWith("/register")) {
-          window.location.href = "/slr-frontend/login/";
+          window.location.href = "/login/";
           return;
         }
       }

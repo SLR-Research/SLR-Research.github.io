@@ -503,7 +503,7 @@
       }
 
       // Update sidebar
-      const link = document.querySelector(`a[href="/slr-frontend/modul/${this.#slug}"]`);
+      const link = document.querySelector(`a[href="/modul/${this.#slug}"]`);
       if (
         link &&
         !link.querySelector(".badge-success, [class*='text-success']")
@@ -853,7 +853,7 @@
       this.#results.innerHTML = results
         .map(
           (m, i) => `
-        <a href="/slr-frontend/modul/${m.slug}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-base-200 transition-colors ${i === 0 ? "bg-base-200" : ""}" data-index="${i}">
+        <a href="/modul/${m.slug}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-base-200 transition-colors ${i === 0 ? "bg-base-200" : ""}" data-index="${i}">
           <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
             <span class="material-symbols-outlined text-primary">${m.icon || "school"}</span>
           </div>

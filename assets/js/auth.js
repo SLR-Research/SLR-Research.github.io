@@ -42,7 +42,7 @@
     // di halaman protected (home, modul, admin).
     requireLogin() {
       if (!this.isLoggedIn()) {
-        window.location.href = "/slr-frontend/login/";
+        window.location.href = "/login/";
         return false;
       }
       return true;
@@ -52,7 +52,7 @@
     requireGuest() {
       if (this.isLoggedIn()) {
         const u = this.getUser();
-        const dest = (u && u.selected_track) ? "/slr-frontend/modul/?slug=home" : "/slr-frontend/select-track/";
+        const dest = (u && u.selected_track) ? "/modul/?slug=home" : "/select-track/";
         window.location.href = dest;
         return false;
       }
@@ -62,7 +62,7 @@
     async logout() {
       try { await window.Api.post("/logout"); } catch (_) { /* best-effort */ }
       this.clear();
-      window.location.href = "/slr-frontend/login/";
+      window.location.href = "/login/";
     },
   };
 

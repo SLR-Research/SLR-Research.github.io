@@ -14,7 +14,7 @@
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
+  <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body class="bg-base-100">
 
@@ -53,7 +53,7 @@
           <div class="flex-1 min-w-0">
             <!-- Breadcrumb -->
             <nav class="flex items-center gap-2 text-sm text-base-content/60 mb-4">
-              <a href="/slr-frontend/modul/?slug=home" class="hover:text-primary transition-colors">Beranda</a>
+              <a href="/modul/?slug=home" class="hover:text-primary transition-colors">Beranda</a>
               <span class="material-symbols-outlined text-base">chevron_right</span>
               <span class="text-primary font-medium truncate" id="breadcrumb-current">Memuat...</span>
             </nav>
@@ -191,7 +191,7 @@
 
       <!-- Brand -->
       <div class="p-5 border-b border-base-200 bg-gradient-to-r from-primary/5 to-transparent">
-        <a href="/slr-frontend/modul/?slug=home" class="flex items-center gap-3">
+        <a href="/modul/?slug=home" class="flex items-center gap-3">
           <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
             <span class="material-symbols-outlined text-white">menu_book</span>
           </div>
@@ -268,7 +268,7 @@
 
       <!-- Admin Link -->
       <div id="admin-link-wrap" class="hidden px-4 py-3 border-t border-base-200">
-        <a href="/slr-frontend/admin/dashboard/" class="btn btn-sm btn-outline btn-primary w-full gap-2">
+        <a href="/admin/dashboard/" class="btn btn-sm btn-outline btn-primary w-full gap-2">
           <span class="material-symbols-outlined" style="font-size:18px">admin_panel_settings</span>
           Admin Panel
         </a>
@@ -286,8 +286,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script src="/slr-frontend/assets/js/auth.js"></script>
-<script src="/slr-frontend/assets/js/api.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/api.js"></script>
 <script>
 Auth.requireLogin();
 
@@ -335,7 +335,7 @@ document.getElementById("track-icon").textContent = tm.icon;
         const u = Auth.getUser() || {};
         u.selected_track = newTrack;
         Auth.setUser(u);
-        location.href = "/slr-frontend/modul/?slug=home";
+        location.href = "/modul/?slug=home";
       } catch (err) {
         alert("Gagal switch track: " + (err.message || ""));
         btn.style.opacity = "1";
@@ -381,7 +381,7 @@ window.addEventListener("scroll", () => {
 // ── Build sidebar nav + load progress ──────────────────
 async function loadHomeAndContent() {
   if (!track) {
-    location.href = "/slr-frontend/select-track/";
+    location.href = "/select-track/";
     return;
   }
 
@@ -421,7 +421,7 @@ async function loadHomeAndContent() {
   navEl.innerHTML = "";
   moduls.forEach((m) => {
     const a = document.createElement("a");
-    a.href = "/slr-frontend/modul/?slug=" + encodeURIComponent(m.slug);
+    a.href = "/modul/?slug=" + encodeURIComponent(m.slug);
     const isActive = m.slug === slug;
     a.className = "group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all " +
       (isActive ? "bg-primary/10 text-primary font-semibold shadow-sm" : "text-base-content/80 hover:bg-base-200");
@@ -473,7 +473,7 @@ async function loadHomeAndContent() {
   // Prev/next nav
   if (modulData.prev) {
     const a = document.getElementById("prev-link");
-    a.href = "/slr-frontend/modul/?slug=" + encodeURIComponent(modulData.prev.slug);
+    a.href = "/modul/?slug=" + encodeURIComponent(modulData.prev.slug);
     document.getElementById("prev-title").textContent = modulData.prev.title;
     a.classList.remove("hidden");
   } else {
@@ -481,7 +481,7 @@ async function loadHomeAndContent() {
   }
   if (modulData.next) {
     const a = document.getElementById("next-link");
-    a.href = "/slr-frontend/modul/?slug=" + encodeURIComponent(modulData.next.slug);
+    a.href = "/modul/?slug=" + encodeURIComponent(modulData.next.slug);
     document.getElementById("next-title").textContent = modulData.next.title;
     a.classList.remove("hidden");
   } else {
