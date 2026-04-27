@@ -5,98 +5,169 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin · Users — SLR AI Guide</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
   <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
 </head>
 <body class="bg-base-100">
-  <header class="navbar bg-base-100 border-b border-base-300">
-    <div class="container mx-auto px-4 flex justify-between">
-      <a href="/slr-frontend/admin/dashboard/" class="font-semibold">Admin Dashboard</a>
-      <div class="flex gap-2">
-        <a href="/slr-frontend/admin/users/" class="btn btn-ghost btn-sm btn-active">Users</a>
-        <a href="/slr-frontend/admin/progress/" class="btn btn-ghost btn-sm">Progress</a>
-        <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
+
+<div class="navbar bg-base-100 border-b border-base-200 sticky top-0 z-40">
+  <div class="flex-1">
+    <a href="/slr-frontend/admin/dashboard/" class="flex items-center gap-2 px-4">
+      <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+      <span class="font-bold text-lg">Admin Panel</span>
+    </a>
+  </div>
+  <div class="flex-none">
+    <ul class="menu menu-horizontal px-1 gap-1">
+      <li><a href="/slr-frontend/admin/dashboard/"><span class="material-symbols-outlined text-sm">dashboard</span> Dashboard</a></li>
+      <li><a href="/slr-frontend/admin/users/" class="active"><span class="material-symbols-outlined text-sm">group</span> Users</a></li>
+      <li><a href="/slr-frontend/admin/progress/"><span class="material-symbols-outlined text-sm">trending_up</span> Progress</a></li>
+    </ul>
+    <div class="divider divider-horizontal mx-0"></div>
+    <div class="flex items-center gap-2 px-2">
+      <div class="avatar placeholder">
+        <div class="bg-neutral text-neutral-content rounded-full w-8">
+          <span class="text-xs font-bold" id="userInitials">—</span>
+        </div>
+      </div>
+      <span class="text-sm font-medium hidden sm:inline" id="userName">—</span>
+    </div>
+    <a href="/slr-frontend/modul/?slug=home" class="btn btn-ghost btn-sm" title="Kembali ke App">
+      <span class="material-symbols-outlined text-sm">arrow_back</span>
+    </a>
+    <button id="logoutBtn" class="btn btn-ghost btn-sm" title="Logout">
+      <span class="material-symbols-outlined text-sm">logout</span>
+    </button>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Kelola User</h1>
+      <p class="text-sm text-base-content/60"><span id="userCount">—</span> user terdaftar</p>
+    </div>
+    <form id="searchForm" class="flex gap-2">
+      <input type="text" name="q" id="searchInput" placeholder="Cari nama atau email..." class="input input-bordered input-sm w-64">
+      <button type="submit" class="btn btn-sm btn-primary gap-1">
+        <span class="material-symbols-outlined text-sm">search</span> Cari
+      </button>
+      <button type="button" id="resetBtn" class="btn btn-sm btn-ghost hidden">Reset</button>
+    </form>
+  </div>
+
+  <div id="errorState" class="hidden alert alert-error mb-4 text-sm"></div>
+
+  <div class="card bg-base-100 border border-base-200">
+    <div class="card-body p-0">
+      <div id="loading" class="text-center py-12 opacity-60">Memuat...</div>
+      <div id="emptyState" class="hidden text-center py-12">
+        <span class="material-symbols-outlined text-5xl text-base-content/20 mb-4">person_off</span>
+        <p class="text-base-content/50" id="emptyMsg">Belum ada user terdaftar</p>
+      </div>
+      <div id="tableWrap" class="hidden overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nama</th><th>Email</th><th>Afiliasi</th><th>Role</th><th>Status</th><th>Progress</th><th>Terdaftar</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
       </div>
     </div>
-  </header>
+  </div>
+</div>
 
-  <main class="container mx-auto px-4 py-8 max-w-6xl">
-    <div class="flex items-baseline justify-between mb-4">
-      <h1 class="text-2xl font-semibold">Daftar User</h1>
-      <span class="text-sm opacity-70" id="countLabel"></span>
-    </div>
+<script src="/slr-frontend/assets/js/auth.js"></script>
+<script src="/slr-frontend/assets/js/api.js"></script>
+<script>
+Auth.requireLogin();
+const u = Auth.getUser() || {};
+document.getElementById("userName").textContent = u.name || "—";
+document.getElementById("userInitials").textContent = (u.name || "?").slice(0,2).toUpperCase();
+document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
 
-    <div id="loading" class="opacity-60">Memuat...</div>
-    <div id="errorState" class="hidden alert alert-error text-sm"></div>
+function fmtDate(s) {
+  if (!s) return "—";
+  try { return new Date(s).toLocaleDateString("id-ID", {day:"2-digit",month:"short",year:"numeric"}); } catch { return s; }
+}
 
-    <div id="tableWrap" class="hidden overflow-x-auto">
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>Email</th>
-            <th>Track</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
-  </main>
+const initialQ = new URLSearchParams(location.search).get("q") || "";
+document.getElementById("searchInput").value = initialQ;
+if (initialQ) document.getElementById("resetBtn").classList.remove("hidden");
 
-  <script src="/slr-frontend/assets/js/auth.js"></script>
-  <script src="/slr-frontend/assets/js/api.js"></script>
-  <script>
-    Auth.requireLogin();
-    document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+document.getElementById("searchForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const q = document.getElementById("searchInput").value.trim();
+  location.search = q ? "?q=" + encodeURIComponent(q) : "";
+});
+document.getElementById("resetBtn").addEventListener("click", () => location.search = "");
 
-    (async function loadUsers() {
-      const loading = document.getElementById("loading");
-      const wrap = document.getElementById("tableWrap");
-      const rows = document.getElementById("rows");
-      const errBox = document.getElementById("errorState");
-      const count = document.getElementById("countLabel");
-      try {
-        const data = await Api.get("/admin/users");
-        loading.classList.add("hidden");
-        const users = data.users || [];
-        count.textContent = users.length + " user";
-
-        rows.innerHTML = users.map(() => `
-          <tr>
-            <td><a class="link" data-id></a></td>
-            <td data-email></td>
-            <td data-track></td>
-            <td data-role></td>
-            <td data-status></td>
-            <td><button class="btn btn-xs btn-ghost" data-detail>Detail</button></td>
-          </tr>
-        `).join("");
-        rows.querySelectorAll("tr").forEach((tr, i) => {
-          const u = users[i];
-          const link = tr.querySelector("[data-id]");
-          link.textContent = u.name || "(no name)";
-          link.href = "/slr-frontend/admin/users-detail/?id=" + encodeURIComponent(u.id);
-          tr.querySelector("[data-email]").textContent = u.email;
-          tr.querySelector("[data-track]").textContent = u.selected_track || "—";
-          tr.querySelector("[data-role]").textContent = u.role;
-          const status = tr.querySelector("[data-status]");
-          status.textContent = u.is_active ? "Aktif" : "Nonaktif";
-          status.className = u.is_active ? "text-success" : "text-error";
-          tr.querySelector("[data-detail]").addEventListener("click", () => {
-            window.location.href = link.href;
-          });
-        });
-        wrap.classList.remove("hidden");
-      } catch (err) {
-        loading.classList.add("hidden");
-        errBox.textContent = err.status === 403 ? "Akses admin diperlukan" : (err.message || "Gagal memuat user");
-        errBox.classList.remove("hidden");
-      }
-    })();
-  </script>
+(async function load() {
+  const errBox = document.getElementById("errorState");
+  const loading = document.getElementById("loading");
+  try {
+    const path = "/admin/users" + (initialQ ? "?q=" + encodeURIComponent(initialQ) : "");
+    const d = await Api.get(path);
+    loading.classList.add("hidden");
+    document.getElementById("userCount").textContent = d.count;
+    const users = d.users || [];
+    if (users.length === 0) {
+      const empty = document.getElementById("emptyState");
+      document.getElementById("emptyMsg").textContent = initialQ
+        ? `Tidak ditemukan user dengan kata kunci "${initialQ}"`
+        : "Belum ada user terdaftar";
+      empty.classList.remove("hidden");
+    } else {
+      const tbody = document.getElementById("rows");
+      users.forEach((u) => {
+        const tr = document.createElement("tr");
+        tr.className = "hover";
+        tr.innerHTML = `
+          <td><a class="font-medium hover:text-primary"></a></td>
+          <td class="text-base-content/70 text-sm"></td>
+          <td class="text-base-content/70 text-sm"></td>
+          <td><span class="badge badge-sm"></span></td>
+          <td><span class="badge badge-sm"></span></td>
+          <td><div class="flex items-center gap-2"><progress class="progress progress-primary w-16"></progress><span class="text-xs text-base-content/60"></span></div></td>
+          <td class="text-base-content/60 text-xs"></td>
+          <td><a class="btn btn-ghost btn-xs gap-1"><span class="material-symbols-outlined" style="font-size:16px">visibility</span> Detail</a></td>`;
+        const detailUrl = "/slr-frontend/admin/users-detail/?id=" + encodeURIComponent(u.id);
+        const tds = tr.querySelectorAll("td");
+        const a = tds[0].querySelector("a");
+        a.href = detailUrl;
+        a.textContent = u.name || "(no name)";
+        tds[1].textContent = u.email;
+        tds[2].textContent = u.affiliation || "—";
+        const roleBadge = tds[3].querySelector(".badge");
+        roleBadge.textContent = u.role;
+        roleBadge.className += " " + (u.role === "admin" ? "badge-warning" : "badge-ghost");
+        const statusBadge = tds[4].querySelector(".badge");
+        statusBadge.textContent = u.is_active ? "Aktif" : "Nonaktif";
+        statusBadge.className += " " + (u.is_active ? "badge-success" : "badge-error");
+        const completed = u.completed_count || 0;
+        const max = 10;
+        tds[5].querySelector("progress").value = completed;
+        tds[5].querySelector("progress").max = max;
+        tds[5].querySelector("span").textContent = `${completed}/${max}`;
+        tds[6].textContent = fmtDate(u.created_at);
+        tds[7].querySelector("a").href = detailUrl;
+        tbody.appendChild(tr);
+      });
+      document.getElementById("tableWrap").classList.remove("hidden");
+    }
+  } catch (err) {
+    loading.classList.add("hidden");
+    errBox.textContent = err.status === 403 ? "Akses admin diperlukan" : (err.message || "Gagal memuat user");
+    errBox.classList.remove("hidden");
+  }
+})();
+</script>
 </body>
 </html>

@@ -5,80 +5,114 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Masuk — SLR AI Guide</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
   <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
 </head>
-<body class="bg-base-200 min-h-screen flex items-center justify-center px-4">
-  <div class="card bg-base-100 shadow-lg w-full max-w-md">
+<body class="bg-base-200">
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-base-200 p-4">
+  <div class="card w-full max-w-md bg-base-100 shadow-xl">
     <div class="card-body">
-      <h1 class="card-title justify-center mb-2">Masuk</h1>
-      <p class="text-center text-sm opacity-70 mb-4">SLR AI Guide</p>
 
-      <form id="loginForm" class="space-y-3" novalidate>
-        <label class="form-control">
-          <span class="label-text mb-1">Email</span>
-          <input type="email" name="email" class="input input-bordered" required autocomplete="email">
-        </label>
-        <label class="form-control">
-          <span class="label-text mb-1">Password</span>
-          <input type="password" name="password" class="input input-bordered" required minlength="8" autocomplete="current-password">
-        </label>
+      <!-- Brand -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold">SLR AI Guide</h1>
+        <p class="text-base-content/60 text-sm mt-1">Panduan Systematic Literature Review dengan Claude</p>
+      </div>
 
-        <div id="alert" class="hidden alert alert-error text-sm py-2"></div>
+      <!-- Success after register (?registered=1) -->
+      <div id="successAlert" class="hidden alert alert-success mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span>Akun berhasil dibuat! Silakan login.</span>
+      </div>
 
-        <button type="submit" id="submitBtn" class="btn btn-primary w-full">Masuk</button>
+      <!-- Error message -->
+      <div id="errorAlert" class="hidden alert alert-error mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span id="errorMsg"></span>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="space-y-4" novalidate>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Email</span></label>
+          <input type="email" name="email" placeholder="nama@email.com" class="input input-bordered w-full" required autofocus autocomplete="email">
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Password</span></label>
+          <input type="password" name="password" placeholder="••••••••" class="input input-bordered w-full" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-full mt-2">Masuk</button>
       </form>
 
-      <p class="text-sm text-center mt-4">
-        Belum punya akun?
-        <a href="/slr-frontend/register/" class="link link-primary">Daftar gratis</a>
-      </p>
+      <div class="divider text-xs">Belum punya akun?</div>
+
+      <a href="/slr-frontend/register/" class="btn btn-outline w-full">Daftar Sekarang</a>
     </div>
   </div>
+</div>
 
-  <script src="/slr-frontend/assets/js/auth.js"></script>
-  <script src="/slr-frontend/assets/js/api.js"></script>
-  <script>
-    Auth.requireGuest();
+<script src="/slr-frontend/assets/js/auth.js"></script>
+<script src="/slr-frontend/assets/js/api.js"></script>
+<script>
+Auth.requireGuest();
 
-    const form = document.getElementById("loginForm");
-    const alertBox = document.getElementById("alert");
-    const submitBtn = document.getElementById("submitBtn");
+if (new URLSearchParams(location.search).get("registered")) {
+  document.getElementById("successAlert").classList.remove("hidden");
+}
 
-    function showError(msg) {
-      alertBox.textContent = msg;
-      alertBox.classList.remove("hidden");
-    }
+const form = document.getElementById("loginForm");
+const errAlert = document.getElementById("errorAlert");
+const errMsg = document.getElementById("errorMsg");
+const submitBtn = document.getElementById("submitBtn");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      alertBox.classList.add("hidden");
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Memproses...';
+function showError(msg) {
+  errMsg.textContent = msg;
+  errAlert.classList.remove("hidden");
+}
 
-      const fd = new FormData(form);
-      try {
-        const res = await Api.post("/login", {
-          email: fd.get("email"),
-          password: fd.get("password"),
-        });
-        if (res && res.token) {
-          Auth.setToken(res.token);
-          if (res.user) Auth.setUser(res.user);
-          // Redirect: kalau belum pilih track → /select-track/, else /home/
-          const dest = (res.user && res.user.selected_track) ? "/slr-frontend/home/" : "/slr-frontend/select-track/";
-          window.location.href = dest;
-        } else {
-          showError("Response tidak valid dari server");
-        }
-      } catch (err) {
-        showError(err.message || "Login gagal");
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Masuk";
-      }
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errAlert.classList.add("hidden");
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Memproses...';
+
+  const fd = new FormData(form);
+  try {
+    const res = await Api.post("/login", {
+      email: fd.get("email"),
+      password: fd.get("password"),
     });
-  </script>
+    if (res && res.token) {
+      Auth.setToken(res.token);
+      if (res.user) Auth.setUser(res.user);
+      const dest = (res.user && res.user.selected_track) ? "/slr-frontend/modul/?slug=home" : "/slr-frontend/select-track/";
+      location.href = dest;
+    } else {
+      showError("Response tidak valid dari server");
+    }
+  } catch (err) {
+    showError(err.message || "Login gagal");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Masuk";
+  }
+});
+</script>
 </body>
 </html>

@@ -5,84 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Daftar — SLR AI Guide</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
   <link rel="stylesheet" href="/slr-frontend/assets/css/custom.css">
 </head>
-<body class="bg-base-200 min-h-screen flex items-center justify-center px-4">
-  <div class="card bg-base-100 shadow-lg w-full max-w-md">
+<body class="bg-base-200">
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-base-200 p-4">
+  <div class="card w-full max-w-md bg-base-100 shadow-xl">
     <div class="card-body">
-      <h1 class="card-title justify-center mb-2">Daftar Gratis</h1>
-      <p class="text-center text-sm opacity-70 mb-4">Akses penuh modul SLR AI Guide</p>
 
-      <form id="registerForm" class="space-y-3" novalidate>
-        <label class="form-control">
-          <span class="label-text mb-1">Nama lengkap</span>
-          <input type="text" name="name" class="input input-bordered" required minlength="2" autocomplete="name">
-        </label>
-        <label class="form-control">
-          <span class="label-text mb-1">Email</span>
-          <input type="email" name="email" class="input input-bordered" required autocomplete="email">
-        </label>
-        <label class="form-control">
-          <span class="label-text mb-1">Password</span>
-          <input type="password" name="password" class="input input-bordered" required minlength="8" autocomplete="new-password">
-          <span class="label-text-alt mt-1 opacity-70">Minimal 8 karakter</span>
-        </label>
+      <!-- Brand -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-primary" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM13 7a1 1 0 112 0v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1V7z"/>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold">Daftar Akun</h1>
+        <p class="text-base-content/60 text-sm mt-1">Buat akun untuk mengakses seluruh modul SLR</p>
+      </div>
 
-        <div id="alert" class="hidden alert alert-error text-sm py-2"></div>
+      <!-- Error message -->
+      <div id="errorAlert" class="hidden alert alert-error mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span id="errorMsg"></span>
+      </div>
 
-        <button type="submit" id="submitBtn" class="btn btn-primary w-full">Daftar</button>
+      <!-- Register Form -->
+      <form id="registerForm" class="space-y-4" novalidate>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Nama Lengkap</span></label>
+          <input type="text" name="name" placeholder="Dr. Budi Santoso" class="input input-bordered w-full" required autofocus autocomplete="name">
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Email</span></label>
+          <input type="email" name="email" placeholder="nama@email.com" class="input input-bordered w-full" required autocomplete="email">
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Afiliasi / Institusi</span></label>
+          <input type="text" name="affiliation" placeholder="Universitas Indonesia" class="input input-bordered w-full" autocomplete="organization">
+          <label class="label"><span class="label-text-alt text-base-content/50">Opsional — Nama universitas atau institusi Anda</span></label>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Password</span></label>
+          <input type="password" name="password" placeholder="Min. 8 karakter" class="input input-bordered w-full" required minlength="8" maxlength="128" autocomplete="new-password">
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Konfirmasi Password</span></label>
+          <input type="password" name="confirm_password" placeholder="Ulangi password" class="input input-bordered w-full" required autocomplete="new-password">
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-full mt-2">Buat Akun</button>
       </form>
 
-      <p class="text-sm text-center mt-4">
-        Sudah punya akun?
-        <a href="/slr-frontend/login/" class="link link-primary">Masuk</a>
-      </p>
+      <div class="divider text-xs">Sudah punya akun?</div>
+
+      <a href="/slr-frontend/login/" class="btn btn-outline w-full">Login</a>
     </div>
   </div>
+</div>
 
-  <script src="/slr-frontend/assets/js/auth.js"></script>
-  <script src="/slr-frontend/assets/js/api.js"></script>
-  <script>
-    Auth.requireGuest();
+<script src="/slr-frontend/assets/js/auth.js"></script>
+<script src="/slr-frontend/assets/js/api.js"></script>
+<script>
+Auth.requireGuest();
 
-    const form = document.getElementById("registerForm");
-    const alertBox = document.getElementById("alert");
-    const submitBtn = document.getElementById("submitBtn");
+const form = document.getElementById("registerForm");
+const errAlert = document.getElementById("errorAlert");
+const errMsg = document.getElementById("errorMsg");
+const submitBtn = document.getElementById("submitBtn");
 
-    function showError(msg) {
-      alertBox.textContent = msg;
-      alertBox.classList.remove("hidden");
-    }
+function showError(msg) {
+  errMsg.textContent = msg;
+  errAlert.classList.remove("hidden");
+}
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      alertBox.classList.add("hidden");
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Memproses...';
-
-      const fd = new FormData(form);
-      try {
-        const res = await Api.post("/register", {
-          name: fd.get("name"),
-          email: fd.get("email"),
-          password: fd.get("password"),
-        });
-        if (res && res.token) {
-          Auth.setToken(res.token);
-          if (res.user) Auth.setUser(res.user);
-          window.location.href = "/slr-frontend/select-track/";
-        } else {
-          showError("Response tidak valid dari server");
-        }
-      } catch (err) {
-        showError(err.message || "Registrasi gagal");
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Daftar";
-      }
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errAlert.classList.add("hidden");
+  const fd = new FormData(form);
+  if (fd.get("password") !== fd.get("confirm_password")) {
+    showError("Konfirmasi password tidak cocok");
+    return;
+  }
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Memproses...';
+  try {
+    const res = await Api.post("/register", {
+      name: fd.get("name"),
+      email: fd.get("email"),
+      affiliation: fd.get("affiliation") || "",
+      password: fd.get("password"),
     });
-  </script>
+    if (res && res.token) {
+      Auth.setToken(res.token);
+      if (res.user) Auth.setUser(res.user);
+      location.href = "/slr-frontend/select-track/";
+    } else {
+      showError("Response tidak valid dari server");
+    }
+  } catch (err) {
+    showError(err.message || "Registrasi gagal");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Buat Akun";
+  }
+});
+</script>
 </body>
 </html>

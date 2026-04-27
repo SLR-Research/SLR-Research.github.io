@@ -48,10 +48,12 @@
       return true;
     },
 
-    // requireGuest: redirect ke /home/ kalau sudah login. Pakai di /login, /register.
+    // requireGuest: redirect ke /modul/?slug=home kalau sudah login. Pakai di /login, /register.
     requireGuest() {
       if (this.isLoggedIn()) {
-        window.location.href = "/slr-frontend/home/";
+        const u = this.getUser();
+        const dest = (u && u.selected_track) ? "/slr-frontend/modul/?slug=home" : "/slr-frontend/select-track/";
+        window.location.href = dest;
         return false;
       }
       return true;
