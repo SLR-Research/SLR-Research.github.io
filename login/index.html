@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Masuk — SLR AI Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-200 min-h-screen flex items-center justify-center px-4">
+  <div class="card bg-base-100 shadow-lg w-full max-w-md">
+    <div class="card-body">
+      <h1 class="card-title justify-center mb-2">Masuk</h1>
+      <p class="text-center text-sm opacity-70 mb-4">SLR AI Guide</p>
+
+      <form id="loginForm" class="space-y-3" novalidate>
+        <label class="form-control">
+          <span class="label-text mb-1">Email</span>
+          <input type="email" name="email" class="input input-bordered" required autocomplete="email">
+        </label>
+        <label class="form-control">
+          <span class="label-text mb-1">Password</span>
+          <input type="password" name="password" class="input input-bordered" required minlength="8" autocomplete="current-password">
+        </label>
+
+        <div id="alert" class="hidden alert alert-error text-sm py-2"></div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-full">Masuk</button>
+      </form>
+
+      <p class="text-sm text-center mt-4">
+        Belum punya akun?
+        <a href="/register/" class="link link-primary">Daftar gratis</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script>
+    Auth.requireGuest();
+
+    const form = document.getElementById("loginForm");
+    const alertBox = document.getElementById("alert");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function showError(msg) {
+      alertBox.textContent = msg;
+      alertBox.classList.remove("hidden");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      alertBox.classList.add("hidden");
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Memproses...';
+
+      const fd = new FormData(form);
+      try {
+        const res = await Api.post("/login", {
+          email: fd.get("email"),
+          password: fd.get("password"),
+        });
+        if (res && res.token) {
+          Auth.setToken(res.token);
+          if (res.user) Auth.setUser(res.user);
+          // Redirect: kalau belum pilih track → /select-track/, else /home/
+          const dest = (res.user && res.user.selected_track) ? "/home/" : "/select-track/";
+          window.location.href = dest;
+        } else {
+          showError("Response tidak valid dari server");
+        }
+      } catch (err) {
+        showError(err.message || "Login gagal");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Masuk";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daftar — SLR AI Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-200 min-h-screen flex items-center justify-center px-4">
+  <div class="card bg-base-100 shadow-lg w-full max-w-md">
+    <div class="card-body">
+      <h1 class="card-title justify-center mb-2">Daftar Gratis</h1>
+      <p class="text-center text-sm opacity-70 mb-4">Akses penuh modul SLR AI Guide</p>
+
+      <form id="registerForm" class="space-y-3" novalidate>
+        <label class="form-control">
+          <span class="label-text mb-1">Nama lengkap</span>
+          <input type="text" name="name" class="input input-bordered" required minlength="2" autocomplete="name">
+        </label>
+        <label class="form-control">
+          <span class="label-text mb-1">Email</span>
+          <input type="email" name="email" class="input input-bordered" required autocomplete="email">
+        </label>
+        <label class="form-control">
+          <span class="label-text mb-1">Password</span>
+          <input type="password" name="password" class="input input-bordered" required minlength="8" autocomplete="new-password">
+          <span class="label-text-alt mt-1 opacity-70">Minimal 8 karakter</span>
+        </label>
+
+        <div id="alert" class="hidden alert alert-error text-sm py-2"></div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-full">Daftar</button>
+      </form>
+
+      <p class="text-sm text-center mt-4">
+        Sudah punya akun?
+        <a href="/login/" class="link link-primary">Masuk</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script>
+    Auth.requireGuest();
+
+    const form = document.getElementById("registerForm");
+    const alertBox = document.getElementById("alert");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function showError(msg) {
+      alertBox.textContent = msg;
+      alertBox.classList.remove("hidden");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      alertBox.classList.add("hidden");
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Memproses...';
+
+      const fd = new FormData(form);
+      try {
+        const res = await Api.post("/register", {
+          name: fd.get("name"),
+          email: fd.get("email"),
+          password: fd.get("password"),
+        });
+        if (res && res.token) {
+          Auth.setToken(res.token);
+          if (res.user) Auth.setUser(res.user);
+          window.location.href = "/select-track/";
+        } else {
+          showError("Response tidak valid dari server");
+        }
+      } catch (err) {
+        showError(err.message || "Registrasi gagal");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Daftar";
+      }
+    });
+  </script>
+</body>
+</html>

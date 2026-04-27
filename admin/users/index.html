@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · Users — SLR AI Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-100">
+  <header class="navbar bg-base-100 border-b border-base-300">
+    <div class="container mx-auto px-4 flex justify-between">
+      <a href="/admin/dashboard/" class="font-semibold">Admin Dashboard</a>
+      <div class="flex gap-2">
+        <a href="/admin/users/" class="btn btn-ghost btn-sm btn-active">Users</a>
+        <a href="/admin/progress/" class="btn btn-ghost btn-sm">Progress</a>
+        <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="flex items-baseline justify-between mb-4">
+      <h1 class="text-2xl font-semibold">Daftar User</h1>
+      <span class="text-sm opacity-70" id="countLabel"></span>
+    </div>
+
+    <div id="loading" class="opacity-60">Memuat...</div>
+    <div id="errorState" class="hidden alert alert-error text-sm"></div>
+
+    <div id="tableWrap" class="hidden overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Email</th>
+            <th>Track</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script>
+    Auth.requireLogin();
+    document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+
+    (async function loadUsers() {
+      const loading = document.getElementById("loading");
+      const wrap = document.getElementById("tableWrap");
+      const rows = document.getElementById("rows");
+      const errBox = document.getElementById("errorState");
+      const count = document.getElementById("countLabel");
+      try {
+        const data = await Api.get("/admin/users");
+        loading.classList.add("hidden");
+        const users = data.users || [];
+        count.textContent = users.length + " user";
+
+        rows.innerHTML = users.map(() => `
+          <tr>
+            <td><a class="link" data-id></a></td>
+            <td data-email></td>
+            <td data-track></td>
+            <td data-role></td>
+            <td data-status></td>
+            <td><button class="btn btn-xs btn-ghost" data-detail>Detail</button></td>
+          </tr>
+        `).join("");
+        rows.querySelectorAll("tr").forEach((tr, i) => {
+          const u = users[i];
+          const link = tr.querySelector("[data-id]");
+          link.textContent = u.name || "(no name)";
+          link.href = "/admin/users-detail/?id=" + encodeURIComponent(u.id);
+          tr.querySelector("[data-email]").textContent = u.email;
+          tr.querySelector("[data-track]").textContent = u.selected_track || "—";
+          tr.querySelector("[data-role]").textContent = u.role;
+          const status = tr.querySelector("[data-status]");
+          status.textContent = u.is_active ? "Aktif" : "Nonaktif";
+          status.className = u.is_active ? "text-success" : "text-error";
+          tr.querySelector("[data-detail]").addEventListener("click", () => {
+            window.location.href = link.href;
+          });
+        });
+        wrap.classList.remove("hidden");
+      } catch (err) {
+        loading.classList.add("hidden");
+        errBox.textContent = err.status === 403 ? "Akses admin diperlukan" : (err.message || "Gagal memuat user");
+        errBox.classList.remove("hidden");
+      }
+    })();
+  </script>
+</body>
+</html>

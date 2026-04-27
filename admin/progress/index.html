@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · Progress — SLR AI Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-100">
+  <header class="navbar bg-base-100 border-b border-base-300">
+    <div class="container mx-auto px-4 flex justify-between">
+      <a href="/admin/dashboard/" class="font-semibold">Admin Dashboard</a>
+      <div class="flex gap-2">
+        <a href="/admin/users/" class="btn btn-ghost btn-sm">Users</a>
+        <a href="/admin/progress/" class="btn btn-ghost btn-sm btn-active">Progress</a>
+        <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="flex items-baseline justify-between mb-4">
+      <h1 class="text-2xl font-semibold">Progress Overview</h1>
+      <input id="filterInput" type="search" placeholder="Filter user_id / track / slug..." class="input input-sm input-bordered w-64">
+    </div>
+
+    <div id="loading" class="opacity-60">Memuat...</div>
+    <div id="errorState" class="hidden alert alert-error text-sm"></div>
+
+    <div id="tableWrap" class="hidden overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Track</th>
+            <th>Module</th>
+            <th>Selesai</th>
+            <th>Last visit</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script>
+    Auth.requireLogin();
+    document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+
+    let allRows = [];
+
+    function fmtDate(s) {
+      if (!s) return "—";
+      try { return new Date(s).toLocaleString("id-ID"); } catch { return s; }
+    }
+
+    function render(filter) {
+      const rows = document.getElementById("rows");
+      const data = filter
+        ? allRows.filter((p) => [p.user_id, p.track, p.module_slug].some((f) => (f || "").toLowerCase().includes(filter)))
+        : allRows;
+      rows.innerHTML = data.map(() =>
+        `<tr><td class="font-mono text-xs" data-uid></td><td data-track></td><td data-slug></td><td data-done></td><td data-last></td></tr>`
+      ).join("");
+      rows.querySelectorAll("tr").forEach((tr, i) => {
+        const p = data[i];
+        tr.querySelector("[data-uid]").textContent = p.user_id;
+        tr.querySelector("[data-track]").textContent = p.track;
+        tr.querySelector("[data-slug]").textContent = p.module_slug;
+        tr.querySelector("[data-done]").textContent = p.completed ? "✓" : "—";
+        tr.querySelector("[data-last]").textContent = fmtDate(p.last_visited_at);
+      });
+    }
+
+    document.getElementById("filterInput").addEventListener("input", (e) => {
+      render(e.target.value.trim().toLowerCase());
+    });
+
+    (async function load() {
+      const loading = document.getElementById("loading");
+      const wrap = document.getElementById("tableWrap");
+      const errBox = document.getElementById("errorState");
+      try {
+        const data = await Api.get("/admin/progress");
+        loading.classList.add("hidden");
+        allRows = data.progresses || [];
+        render("");
+        wrap.classList.remove("hidden");
+      } catch (err) {
+        loading.classList.add("hidden");
+        errBox.textContent = err.status === 403 ? "Akses admin diperlukan" : (err.message || "Gagal memuat data");
+        errBox.classList.remove("hidden");
+      }
+    })();
+  </script>
+</body>
+</html>

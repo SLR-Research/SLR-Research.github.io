@@ -1,0 +1,853 @@
+/* ═══════════════════════════════════════════════════════════════
+   SLR AI Guide - Custom Styles
+   Modern Learning Platform Design
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── CSS Variables ───────────────────────────────────────────── */
+:root {
+  --content-max-width: 768px;
+  /* GitBook-style font stack */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Roboto Mono', 'Monaco', 'Courier New', 'Courier', monospace;
+  --line-height-body: 1.7;
+  --line-height-heading: 1.25;
+  --color-primary: hsl(var(--p));
+  --color-primary-content: hsl(var(--pc));
+
+  /* Semantic colors for prose (light mode) */
+  --prose-border: #e1e4e8;
+  --prose-bg-subtle: #f6f8fa;
+  --prose-code-text: #24292f;
+  --prose-link: #3b82f6;
+  --prose-bullet: #6b7280;
+  --prose-th-text: #2c3e50;
+  --prose-hint-strong: #3b82f6;
+}
+
+[data-theme="dark"] {
+  --prose-border: hsl(var(--bc) / 0.15);
+  --prose-bg-subtle: hsl(var(--b2));
+  --prose-code-text: #c9d1d9;
+  --prose-link: #60a5fa;
+  --prose-bullet: #9ca3af;
+  --prose-th-text: #c9d1d9;
+  --prose-hint-strong: #60a5fa;
+}
+
+/* ── Typography Base ─────────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  line-height: var(--line-height-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Prose / Markdown Content Styling ────────────────────────── */
+.prose {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  color: hsl(var(--bc));
+  font-weight: 400;
+  letter-spacing: -0.003em;
+}
+
+[data-theme="dark"] .prose {
+  color: hsl(var(--bc) / 0.9);
+}
+
+.prose p {
+  margin-bottom: 1.25em;
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.prose h1 {
+  font-family: var(--font-heading);
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 0;
+  margin-bottom: 0.75em;
+  letter-spacing: -0.025em;
+}
+
+.prose h2 {
+  font-family: var(--font-heading);
+  font-size: 1.5em;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+  letter-spacing: -0.02em;
+  scroll-margin-top: 100px;
+}
+
+.prose h3 {
+  font-family: var(--font-heading);
+  font-size: 1.25em;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  letter-spacing: -0.015em;
+  scroll-margin-top: 100px;
+}
+
+.prose h4 {
+  font-family: var(--font-heading);
+  font-size: 1.125em;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  letter-spacing: -0.01em;
+  scroll-margin-top: 100px;
+}
+
+/* ── Links (GitBook Style) ───────────────────────────────────── */
+.prose a {
+  color: var(--prose-link);
+  text-decoration: none;
+  font-weight: inherit;
+  border-bottom: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.prose a:hover {
+  border-bottom-color: var(--prose-link);
+}
+
+/* ── Strong & Em (GitBook Style) ─────────────────────────────── */
+.prose strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.prose em {
+  font-style: italic;
+  color: inherit;
+}
+
+/* ── Lists (GitBook Style) ───────────────────────────────────── */
+.prose ul,
+.prose ol {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 1.625em;
+}
+
+.prose li {
+  margin-bottom: 0.375em;
+  line-height: 1.7;
+}
+
+.prose ul > li {
+  position: relative;
+  list-style: none;
+  padding-left: 0.25em;
+}
+
+.prose ul > li::before {
+  content: '•';
+  position: absolute;
+  left: -1.25em;
+  color: var(--prose-bullet);
+  font-weight: 600;
+}
+
+.prose ol {
+  list-style: decimal;
+  padding-left: 1.625em;
+}
+
+.prose ol > li {
+  padding-left: 0.375em;
+}
+
+.prose ul ul,
+.prose ol ol,
+.prose ul ol,
+.prose ol ul {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* ── Code Blocks (GitBook Style) ─────────────────────────────── */
+.prose pre {
+  position: relative;
+  border-radius: 0.5rem;
+  background: var(--prose-bg-subtle);
+  color: hsl(var(--bc));
+  padding: 1rem 1.25rem;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border: 1px solid var(--prose-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* All code inside pre: transparent bg, inherit color from pre */
+.prose pre code,
+.prose pre code.hljs {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* Inline code (not inside pre) */
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--prose-bg-subtle);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  color: var(--prose-code-text);
+  font-weight: 400;
+  border: 1px solid var(--prose-border);
+}
+
+/* ── Highlight.js theme overrides ───────────────────────────────
+   github.min.css sets .hljs { background: #fff; color: #24292e; }
+   We override via [data-theme] selectors which have higher specificity. */
+
+/* Light mode: make all token types clearly readable */
+[data-theme="light"] .hljs-comment,
+[data-theme="light"] .hljs-quote {
+  color: #57606a;
+}
+
+[data-theme="light"] .hljs-keyword,
+[data-theme="light"] .hljs-selector-tag,
+[data-theme="light"] .hljs-type {
+  color: #cf222e;
+}
+
+[data-theme="light"] .hljs-string,
+[data-theme="light"] .hljs-regexp {
+  color: #0a3069;
+}
+
+[data-theme="light"] .hljs-number,
+[data-theme="light"] .hljs-literal,
+[data-theme="light"] .hljs-variable,
+[data-theme="light"] .hljs-attr {
+  color: #0550ae;
+}
+
+[data-theme="light"] .hljs-title,
+[data-theme="light"] .hljs-title.function_ {
+  color: #8250df;
+}
+
+[data-theme="light"] .hljs-built_in {
+  color: #0550ae;
+}
+
+/* Dark mode: base text color */
+[data-theme="dark"] .prose pre {
+  color: hsl(var(--bc) / 0.95);
+}
+
+/* Dark mode: high contrast tokens */
+[data-theme="dark"] .hljs-comment,
+[data-theme="dark"] .hljs-quote {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .hljs-keyword,
+[data-theme="dark"] .hljs-selector-tag,
+[data-theme="dark"] .hljs-type {
+  color: #ff7b72;
+}
+
+[data-theme="dark"] .hljs-string,
+[data-theme="dark"] .hljs-regexp {
+  color: #a5d6ff;
+}
+
+[data-theme="dark"] .hljs-number,
+[data-theme="dark"] .hljs-literal,
+[data-theme="dark"] .hljs-variable,
+[data-theme="dark"] .hljs-attr {
+  color: #79c0ff;
+}
+
+[data-theme="dark"] .hljs-title,
+[data-theme="dark"] .hljs-title.function_ {
+  color: #d2a8ff;
+}
+
+[data-theme="dark"] .hljs-built_in {
+  color: #79c0ff;
+}
+
+/* ── Copy Button ────────────────────────────────────────────── */
+.prose pre .copy-btn {
+  background: hsl(var(--b1));
+  border: 1px solid var(--prose-border);
+  color: hsl(var(--bc) / 0.9);
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.15s ease;
+}
+
+.prose pre:hover .copy-btn {
+  opacity: 1;
+}
+
+.prose pre .copy-btn:hover {
+  background: hsl(var(--p));
+  color: hsl(var(--pc));
+  border-color: hsl(var(--p));
+}
+
+/* ── Blockquotes (GitBook Hint/Callout Style) ────────────────── */
+.prose blockquote {
+  position: relative;
+  border-left: 4px solid hsl(var(--p));
+  background: hsl(var(--b2));
+  padding: 1.125rem 1.25rem 1.125rem 1.5rem;
+  margin: 1.5em 0;
+  border-radius: 0.375rem;
+  font-style: normal;
+  font-size: 0.95em;
+  color: hsl(var(--bc));
+}
+
+[data-theme="dark"] .prose blockquote {
+  background: hsl(var(--n) / 0.4);
+  color: hsl(var(--bc) / 0.95);
+}
+
+.prose blockquote p:first-child {
+  margin-top: 0;
+}
+
+.prose blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* GitBook-style hint with emoji/icon detection */
+.prose blockquote p:first-child strong:first-child {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  color: var(--prose-hint-strong);
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Tables (GitBook Style) ──────────────────────────────────── */
+.prose table {
+  width: 100%;
+  font-size: 0.9rem;
+  margin: 1.5em 0;
+  border-collapse: collapse;
+  border: 1px solid var(--prose-border);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.prose thead {
+  background: var(--prose-bg-subtle);
+}
+
+.prose th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--prose-border);
+  font-size: 0.875rem;
+  color: var(--prose-th-text);
+}
+
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--prose-border);
+  border-right: 1px solid var(--prose-border);
+}
+
+.prose td:last-child {
+  border-right: none;
+}
+
+.prose tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prose tbody tr:hover {
+  background: var(--prose-bg-subtle);
+}
+
+/* ── Images ──────────────────────────────────────────────────── */
+.prose img {
+  border-radius: 0.75rem;
+  margin: 1.5em 0;
+  box-shadow: 0 4px 6px -1px hsl(var(--bc) / 0.1);
+}
+
+.prose figure {
+  margin: 1.5em 0;
+}
+
+.prose figcaption {
+  text-align: center;
+  font-size: 0.875rem;
+  color: hsl(var(--bc) / 0.8);
+  margin-top: 0.5em;
+}
+
+/* ── Horizontal Rules (GitBook Style) ────────────────────────── */
+.prose hr {
+  border: none;
+  height: 1px;
+  background: var(--prose-border);
+  margin: 2em 0;
+}
+
+/* ── TOC Navigation ──────────────────────────────────────────── */
+.toc-nav {
+  font-size: 0.875rem;
+}
+
+.toc-nav a {
+  display: block;
+  padding: 0.375rem 0.75rem;
+  color: hsl(var(--bc) / 0.8);
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  border-left: 2px solid transparent;
+}
+
+.toc-nav a:hover {
+  background: hsl(var(--b2));
+  color: hsl(var(--bc));
+}
+
+.toc-nav a.active {
+  background: hsl(var(--p) / 0.1);
+  color: hsl(var(--p));
+  border-left-color: hsl(var(--p));
+  font-weight: 500;
+}
+
+.toc-nav a[data-level="3"] {
+  padding-left: 1.5rem;
+  font-size: 0.8125rem;
+}
+
+/* ── Scrollbar Styling ───────────────────────────────────────── */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--bc) / 0.2) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--bc) / 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--bc) / 0.3);
+}
+
+/* ── Progress Ring Animation ─────────────────────────────────── */
+@keyframes progress-ring-fill {
+  from {
+    stroke-dashoffset: 283;
+  }
+}
+
+#progress-ring.animate {
+  animation: progress-ring-fill 1s ease-out forwards;
+}
+
+/* ── Callout Cards ───────────────────────────────────────────── */
+.callout {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  margin: 1.5em 0;
+  border-left: 4px solid;
+}
+
+.callout-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.callout p:last-child {
+  margin-bottom: 0;
+}
+
+.callout.tip {
+  background: hsl(var(--su) / 0.08);
+  border-color: hsl(var(--su));
+}
+
+.callout.warning {
+  background: hsl(var(--wa) / 0.08);
+  border-color: hsl(var(--wa));
+}
+
+.callout.info {
+  background: hsl(var(--in) / 0.08);
+  border-color: hsl(var(--in));
+}
+
+.callout.danger {
+  background: hsl(var(--er) / 0.08);
+  border-color: hsl(var(--er));
+}
+
+/* ── Line Clamp Utilities ───────────────────────────────────── */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Sidebar Active State ────────────────────────────────────── */
+.menu li a.active {
+  background-color: hsl(var(--p) / 0.15);
+  color: hsl(var(--p));
+  font-weight: 600;
+}
+
+/* ── Sidebar Collapsible Sections ─────────────────────────────── */
+.sidebar-section {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  color: hsl(var(--bc) / 0.8);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sidebar-section-header:hover {
+  background: hsl(var(--b2));
+  color: hsl(var(--bc));
+}
+
+.sidebar-section-header .chevron {
+  transition: transform 0.2s ease;
+}
+
+.sidebar-section.collapsed .sidebar-section-header .chevron {
+  transform: rotate(-90deg);
+}
+
+.sidebar-section.collapsed .sidebar-items {
+  display: none;
+}
+
+.sidebar-items {
+  padding-left: 0.25rem;
+}
+
+/* ── Loading Spinner ─────────────────────────────────────────── */
+.loading {
+  display: inline-block;
+}
+
+/* ── Print Styles ──��─────────────────────────────────────────── */
+@media print {
+  .drawer-side,
+  #toc-toggle,
+  #toc-mobile,
+  aside[class*="xl:block"],
+  .btn-ghost,
+  #btn-complete,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  .drawer-content {
+    margin-left: 0 !important;
+  }
+
+  .prose {
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+
+  .prose h1 {
+    font-size: 24pt;
+  }
+
+  .prose h2 {
+    font-size: 18pt;
+    page-break-after: avoid;
+  }
+
+  .prose pre {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    page-break-inside: avoid;
+  }
+
+  .prose blockquote {
+    border-left: 3pt solid #333;
+    background: #f9f9f9;
+  }
+
+  .prose a {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .prose a[href]::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  body {
+    background: white;
+  }
+
+  /* Show print header */
+  .print-header {
+    display: block !important;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2pt solid #333;
+  }
+}
+
+/* ── Mobile Optimizations ────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .prose {
+    font-size: 1rem;
+  }
+
+  .prose h1 {
+    font-size: 1.75em;
+  }
+
+  .prose h2 {
+    font-size: 1.4em;
+  }
+
+  .prose h3 {
+    font-size: 1.2em;
+  }
+
+  .prose pre {
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+}
+
+/* ── Smooth Scroll ───────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Selection Styling ───────────────────────────────────────── */
+::selection {
+  background: hsl(var(--p) / 0.25);
+  color: inherit;
+}
+
+/* ── Focus Styles ───��────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid hsl(var(--p));
+  outline-offset: 2px;
+}
+
+/* ── Animation Utilities ─────────────────────────────────────── */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* ── Tooltip Enhancement ─────────────────────────────────────── */
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  padding: 0.375rem 0.75rem;
+  background: hsl(var(--n));
+  color: hsl(var(--nc));
+  font-size: 0.75rem;
+  border-radius: 0.375rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 50;
+}
+
+[data-tooltip]:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-8px);
+}
+
+/* ── Hero Section Gradients ──────────────────────────────��──── */
+.hero-gradient {
+  background: linear-gradient(135deg, hsl(var(--p) / 0.05) 0%, hsl(var(--s) / 0.03) 50%, transparent 100%);
+}
+
+/* ── Card Hover Effects ──────────────────────────────────────── */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px hsl(var(--bc) / 0.1);
+}
+
+/* ── Button Enhancements ─────────────────────────────────────── */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.btn-primary:active::after {
+  width: 200%;
+  height: 200%;
+}
+
+/* ── Responsive Drawer Adjustments ───────────────────────────── */
+@media (min-width: 1024px) {
+  .drawer-content {
+    margin-left: 0;
+  }
+}
+
+/* ── Global Search Modal ───────────────────────────────────────── */
+#global-search-modal::backdrop {
+  background: hsl(var(--bc) / 0.5);
+  backdrop-filter: blur(4px);
+}
+
+#global-search-modal .modal-box {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+#search-results [data-index]:focus {
+  outline: none;
+  background: hsl(var(--b2));
+}
+
+/* ── Reading Progress Bar ─────────────────────────────────────── */
+#reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 9999;
+}
+
+/* ── Floating Navigation ─────────────────────────────────────── */
+.floating-nav {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+}
+
+/* ── Font Size Adjuster ───────────────────────────────────────── */
+.font-size-adjuster .dropdown-content {
+  min-width: 180px;
+}
+
+/* ── Print Styles Enhancement ─────────────────────────────────── */
+@media print {
+  .font-size-adjuster,
+  .floating-nav,
+  #reading-progress,
+  #global-search-modal,
+  .global-search-trigger {
+    display: none !important;
+  }
+
+  .prose {
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+}

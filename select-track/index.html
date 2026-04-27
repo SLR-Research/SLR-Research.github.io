@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pilih Jalur — SLR AI Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-200 min-h-screen">
+  <main class="container mx-auto px-4 py-12 max-w-4xl">
+    <h1 class="text-3xl font-bold text-center mb-2">Pilih Jalur Belajar</h1>
+    <p class="text-center opacity-70 mb-8">Anda bisa pindah jalur kapan saja dari menu profil.</p>
+
+    <div id="alert" class="hidden alert alert-error text-sm mb-4"></div>
+
+    <div class="grid md:grid-cols-3 gap-4">
+      <button class="card bg-base-100 shadow hover:shadow-lg transition text-left" data-track="slr">
+        <div class="card-body">
+          <h2 class="card-title">SLR</h2>
+          <p class="text-sm opacity-80">Systematic Literature Review penuh — protokol PRISMA, screening, sintesis.</p>
+        </div>
+      </button>
+      <button class="card bg-base-100 shadow hover:shadow-lg transition text-left" data-track="slr-cowork">
+        <div class="card-body">
+          <h2 class="card-title">SLR Cowork</h2>
+          <p class="text-sm opacity-80">SLR kolaboratif dengan cowork session terstruktur.</p>
+        </div>
+      </button>
+      <button class="card bg-base-100 shadow hover:shadow-lg transition text-left" data-track="scoping">
+        <div class="card-body">
+          <h2 class="card-title">Scoping Review</h2>
+          <p class="text-sm opacity-80">Pemetaan luas literatur — cocok untuk topik yang masih emerging.</p>
+        </div>
+      </button>
+    </div>
+  </main>
+
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script>
+    Auth.requireLogin();
+
+    const alertBox = document.getElementById("alert");
+
+    document.querySelectorAll("[data-track]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const track = btn.dataset.track;
+        alertBox.classList.add("hidden");
+        try {
+          await Api.post("/api/track", { track });
+          const user = Auth.getUser() || {};
+          user.selected_track = track;
+          Auth.setUser(user);
+          window.location.href = "/home/";
+        } catch (err) {
+          alertBox.textContent = err.message || "Gagal menyimpan pilihan";
+          alertBox.classList.remove("hidden");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

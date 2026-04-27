@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard — SLR AI Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-100">
+  <header class="navbar bg-base-100 border-b border-base-300">
+    <div class="container mx-auto px-4 flex justify-between">
+      <span class="font-semibold">Admin Dashboard</span>
+      <div class="flex gap-2">
+        <a href="/admin/users/" class="btn btn-ghost btn-sm">Users</a>
+        <a href="/admin/progress/" class="btn btn-ghost btn-sm">Progress</a>
+        <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 max-w-5xl">
+    <h1 class="text-2xl font-semibold mb-6">Ringkasan</h1>
+    <div id="loading" class="opacity-60">Memuat...</div>
+    <div id="stats" class="hidden grid sm:grid-cols-3 gap-4"></div>
+    <div id="errorState" class="hidden alert alert-error text-sm mt-4"></div>
+  </main>
+
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script>
+    Auth.requireLogin();
+    document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+
+    (async function loadStats() {
+      const loading = document.getElementById("loading");
+      const wrap = document.getElementById("stats");
+      const errBox = document.getElementById("errorState");
+      try {
+        const data = await Api.get("/admin/dashboard");
+        loading.classList.add("hidden");
+        const items = [
+          { label: "Total user", value: data.total_users || 0 },
+          { label: "Aktif minggu ini", value: data.active_this_week || 0 },
+          { label: "Modul selesai", value: data.completed_moduls || 0 },
+        ];
+        wrap.innerHTML = items.map(() => `
+          <div class="stat bg-base-200 rounded">
+            <div class="stat-title"></div>
+            <div class="stat-value"></div>
+          </div>
+        `).join("");
+        wrap.querySelectorAll(".stat").forEach((s, i) => {
+          s.querySelector(".stat-title").textContent = items[i].label;
+          s.querySelector(".stat-value").textContent = items[i].value;
+        });
+        wrap.classList.remove("hidden");
+      } catch (err) {
+        loading.classList.add("hidden");
+        if (err.status === 403) {
+          errBox.textContent = "Akses admin diperlukan";
+        } else {
+          errBox.textContent = err.message || "Gagal memuat data";
+        }
+        errBox.classList.remove("hidden");
+      }
+    })();
+  </script>
+</body>
+</html>

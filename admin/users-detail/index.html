@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · User Detail — SLR AI Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-100">
+  <header class="navbar bg-base-100 border-b border-base-300">
+    <div class="container mx-auto px-4 flex justify-between">
+      <a href="/admin/users/" class="text-sm">← Kembali ke daftar user</a>
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 max-w-3xl">
+    <div id="loading" class="opacity-60">Memuat...</div>
+    <div id="errorState" class="hidden alert alert-error text-sm"></div>
+
+    <div id="content" class="hidden space-y-6">
+      <section class="card bg-base-200">
+        <div class="card-body">
+          <h1 class="card-title" id="userName">—</h1>
+          <p class="text-sm opacity-80" id="userEmail">—</p>
+          <p class="text-sm opacity-70 mt-2"><strong>ID:</strong> <span id="userId"></span></p>
+          <p class="text-sm opacity-70"><strong>Affiliation:</strong> <span id="userAff">—</span></p>
+          <p class="text-sm opacity-70"><strong>Track:</strong> <span id="userTrack">—</span></p>
+          <p class="text-sm opacity-70"><strong>Bergabung:</strong> <span id="userJoined">—</span></p>
+
+          <div class="divider my-2"></div>
+
+          <div class="flex flex-wrap gap-2 items-center">
+            <span class="text-sm">Status:</span>
+            <span id="statusBadge" class="badge"></span>
+            <button id="toggleActiveBtn" class="btn btn-xs">Toggle</button>
+          </div>
+          <div class="flex flex-wrap gap-2 items-center mt-2">
+            <span class="text-sm">Role:</span>
+            <span id="roleBadge" class="badge"></span>
+            <select id="roleSelect" class="select select-xs select-bordered">
+              <option value="user">user</option>
+              <option value="admin">admin</option>
+            </select>
+            <button id="changeRoleBtn" class="btn btn-xs">Update role</button>
+          </div>
+          <div id="actionMsg" class="hidden alert alert-success text-xs mt-3"></div>
+          <div id="actionErr" class="hidden alert alert-error text-xs mt-3"></div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-semibold mb-2">Progress per modul</h2>
+        <div id="progressEmpty" class="hidden text-sm opacity-70">Belum ada aktivitas.</div>
+        <table class="table table-xs" id="progressTable">
+          <thead><tr><th>Track</th><th>Slug</th><th>Selesai?</th><th>Last visit</th></tr></thead>
+          <tbody id="progressRows"></tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script>
+    Auth.requireLogin();
+    document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+
+    const id = new URLSearchParams(window.location.search).get("id");
+    if (!id) {
+      window.location.href = "/admin/users/";
+    }
+
+    const els = {
+      loading: document.getElementById("loading"),
+      content: document.getElementById("content"),
+      err: document.getElementById("errorState"),
+      actionMsg: document.getElementById("actionMsg"),
+      actionErr: document.getElementById("actionErr"),
+    };
+
+    function showAction(ok, msg) {
+      const target = ok ? els.actionMsg : els.actionErr;
+      const other = ok ? els.actionErr : els.actionMsg;
+      target.textContent = msg;
+      target.classList.remove("hidden");
+      other.classList.add("hidden");
+    }
+
+    function fmtDate(s) {
+      if (!s) return "—";
+      try { return new Date(s).toLocaleString("id-ID"); } catch { return s; }
+    }
+
+    async function load() {
+      try {
+        const data = await Api.get("/admin/users/" + encodeURIComponent(id));
+        els.loading.classList.add("hidden");
+        const u = data.user;
+        document.getElementById("userName").textContent = u.name;
+        document.getElementById("userEmail").textContent = u.email;
+        document.getElementById("userId").textContent = u.id;
+        document.getElementById("userAff").textContent = u.affiliation || "—";
+        document.getElementById("userTrack").textContent = u.selected_track || "—";
+        document.getElementById("userJoined").textContent = fmtDate(u.created_at);
+
+        const status = document.getElementById("statusBadge");
+        status.textContent = u.is_active ? "Aktif" : "Nonaktif";
+        status.className = "badge " + (u.is_active ? "badge-success" : "badge-error");
+
+        const role = document.getElementById("roleBadge");
+        role.textContent = u.role;
+        role.className = "badge " + (u.role === "admin" ? "badge-primary" : "badge-ghost");
+        document.getElementById("roleSelect").value = u.role;
+
+        const progressRows = document.getElementById("progressRows");
+        const progressEmpty = document.getElementById("progressEmpty");
+        const progresses = data.progresses || [];
+        if (progresses.length === 0) {
+          progressEmpty.classList.remove("hidden");
+          document.getElementById("progressTable").classList.add("hidden");
+        } else {
+          progressRows.innerHTML = progresses.map(() =>
+            `<tr><td data-track></td><td data-slug></td><td data-done></td><td data-last></td></tr>`
+          ).join("");
+          progressRows.querySelectorAll("tr").forEach((tr, i) => {
+            const p = progresses[i];
+            tr.querySelector("[data-track]").textContent = p.track;
+            tr.querySelector("[data-slug]").textContent = p.module_slug;
+            tr.querySelector("[data-done]").textContent = p.completed ? "✓" : "—";
+            tr.querySelector("[data-last]").textContent = fmtDate(p.last_visited_at);
+          });
+        }
+
+        els.content.classList.remove("hidden");
+      } catch (err) {
+        els.loading.classList.add("hidden");
+        els.err.textContent = err.status === 404 ? "User tidak ditemukan"
+          : err.status === 403 ? "Akses admin diperlukan"
+          : (err.message || "Gagal memuat user");
+        els.err.classList.remove("hidden");
+      }
+    }
+
+    document.getElementById("toggleActiveBtn").addEventListener("click", async () => {
+      try {
+        const res = await Api.post("/admin/users/" + encodeURIComponent(id) + "/toggle-active");
+        showAction(true, "Status diubah menjadi: " + (res.is_active ? "Aktif" : "Nonaktif"));
+        load();
+      } catch (err) { showAction(false, err.message || "Gagal toggle"); }
+    });
+
+    document.getElementById("changeRoleBtn").addEventListener("click", async () => {
+      const role = document.getElementById("roleSelect").value;
+      try {
+        const res = await Api.post("/admin/users/" + encodeURIComponent(id) + "/change-role", { role });
+        showAction(true, "Role diubah menjadi: " + res.role);
+        load();
+      } catch (err) { showAction(false, err.message || "Gagal update role"); }
+    });
+
+    load();
+  </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil — SLR AI Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-100">
+  <header class="navbar bg-base-100 border-b border-base-300">
+    <div class="container mx-auto px-4 flex justify-between">
+      <a href="/home/" class="text-sm">← Kembali</a>
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">Keluar</button>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 max-w-2xl space-y-6">
+    <h1 class="text-2xl font-semibold">Profil</h1>
+
+    <div id="loading" class="opacity-60">Memuat...</div>
+    <div id="errorState" class="hidden alert alert-error text-sm"></div>
+
+    <section id="content" class="hidden space-y-6">
+      <div class="card bg-base-200">
+        <div class="card-body">
+          <h2 class="card-title text-base" id="userName">—</h2>
+          <p class="text-sm opacity-80" id="userEmail">—</p>
+          <p class="text-sm opacity-70 mt-2"><strong>Affiliation:</strong> <span id="userAff">—</span></p>
+          <p class="text-sm opacity-70"><strong>Role:</strong> <span id="userRole">—</span></p>
+          <p class="text-sm opacity-70"><strong>Bergabung:</strong> <span id="userJoined">—</span></p>
+        </div>
+      </div>
+
+      <div class="card bg-base-200">
+        <div class="card-body">
+          <h2 class="card-title text-base">Jalur Belajar</h2>
+          <p class="text-sm opacity-70 mb-3">Saat ini: <span id="currentTrack" class="font-medium">—</span></p>
+          <div class="flex flex-wrap gap-2">
+            <button class="btn btn-sm" data-track="slr">SLR</button>
+            <button class="btn btn-sm" data-track="slr-cowork">SLR Cowork</button>
+            <button class="btn btn-sm" data-track="scoping">Scoping</button>
+          </div>
+          <p class="text-xs opacity-60 mt-3">Mengganti jalur akan reset tampilan modul; progress lama tetap tersimpan.</p>
+          <div id="trackMsg" class="hidden alert alert-success text-xs mt-2"></div>
+          <div id="trackErr" class="hidden alert alert-error text-xs mt-2"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script>
+    Auth.requireLogin();
+    document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+
+    function fmtDate(s) {
+      if (!s) return "—";
+      try { return new Date(s).toLocaleString("id-ID"); } catch { return s; }
+    }
+
+    function refreshTrackUI(track) {
+      document.getElementById("currentTrack").textContent = track || "(belum dipilih)";
+      document.querySelectorAll("[data-track]").forEach((b) => {
+        b.classList.toggle("btn-primary", b.dataset.track === track);
+      });
+    }
+
+    async function load() {
+      try {
+        const data = await Api.get("/me");
+        const u = data.user;
+        document.getElementById("userName").textContent = u.name;
+        document.getElementById("userEmail").textContent = u.email;
+        document.getElementById("userAff").textContent = u.affiliation || "—";
+        document.getElementById("userRole").textContent = u.role;
+        document.getElementById("userJoined").textContent = fmtDate(u.created_at);
+        refreshTrackUI(u.selected_track || "");
+        Auth.setUser(u);
+        document.getElementById("loading").classList.add("hidden");
+        document.getElementById("content").classList.remove("hidden");
+      } catch (err) {
+        document.getElementById("loading").classList.add("hidden");
+        const errBox = document.getElementById("errorState");
+        errBox.textContent = err.message || "Gagal memuat profil";
+        errBox.classList.remove("hidden");
+      }
+    }
+
+    document.querySelectorAll("[data-track]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const track = btn.dataset.track;
+        const okBox = document.getElementById("trackMsg");
+        const errBox = document.getElementById("trackErr");
+        okBox.classList.add("hidden"); errBox.classList.add("hidden");
+        try {
+          await Api.post("/api/track", { track });
+          const u = Auth.getUser() || {};
+          u.selected_track = track;
+          Auth.setUser(u);
+          refreshTrackUI(track);
+          okBox.textContent = "Jalur diubah ke: " + track;
+          okBox.classList.remove("hidden");
+        } catch (err) {
+          errBox.textContent = err.message || "Gagal mengubah jalur";
+          errBox.classList.remove("hidden");
+        }
+      });
+    });
+
+    load();
+  </script>
+</body>
+</html>
