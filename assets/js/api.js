@@ -8,13 +8,13 @@
   "use strict";
 
   const DEFAULT_BASE = (() => {
+    if (window.SLR_API_BASE) return window.SLR_API_BASE;
     const host = window.location.hostname;
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://localhost:8080";
     }
-    // Production GCF gen2 endpoint — set setelah deploy:
-    // https://<region>-<project>.cloudfunctions.net/slr-gocroot
-    return window.SLR_API_BASE || "";
+    // Production GCF gen2 (asia-southeast2, project slr-ai-492413).
+    return "https://slr-gocroot-tn6sjkbgbq-et.a.run.app";
   })();
 
   const Api = {
