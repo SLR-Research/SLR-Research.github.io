@@ -292,9 +292,17 @@ const TRACK_META = {
   "buku": { title: "Penulisan Buku Akademik", icon: "menu_book" }
 };
 
-const slug = new URLSearchParams(location.search).get("slug") || "home";
+const urlParams = new URLSearchParams(location.search);
+const slug = urlParams.get("slug") || "home";
+const urlTrack = urlParams.get("track") || "";
 const user = Auth.getUser() || {};
-const track = user.selected_track || "";
+
+// Track precedence: URL ?track= > user.selected_track. Kalau URL track
+// berbeda dari selected_track, switch dulu SEBELUM load content (supaya
+// backend serve modul track yang benar — backend baca selected_track dari DB).
+const track = urlTrack || user.selected_track || "";
+
+// Auto-switch handled inside loadHomeAndContent() supaya bisa await sebelum fetch.
 
 // ── Header user info ───────────────────────────────────
 document.getElementById("user-name").textContent = user.name || "Pengguna";
@@ -398,6 +406,24 @@ async function loadHomeAndContent() {
   if (!track) {
     location.href = "/select-track/";
     return;
+  }
+
+  // Auto-switch: kalau URL ?track= berbeda dari user.selected_track, switch dulu
+  // SEBELUM fetch content. Kalau belum ter-enroll → redirect ke /enroll/.
+  if (urlTrack && urlTrack !== user.selected_track) {
+    try {
+      await Api.post("/api/track", { track: urlTrack });
+      const u = Auth.getUser() || {};
+      u.selected_track = urlTrack;
+      Auth.setUser(u);
+    } catch (err) {
+      const errMsg = (err.message || "").toLowerCase();
+      if (errMsg.includes("belum ter-enroll") || errMsg.includes("not enrolled")) {
+        location.replace("/enroll/?track=" + encodeURIComponent(urlTrack));
+        return;
+      }
+      console.warn("Switch track gagal:", err.message);
+    }
   }
 
   const navEl = document.getElementById("sidebar-nav");

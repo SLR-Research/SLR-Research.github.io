@@ -8,6 +8,21 @@
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
   <link rel="stylesheet" href="/assets/css/custom.css">
+  <script>
+    // Redirect /modul/SLUG (inline content link format) ke SPA /modul/?slug=SLUG
+    // Inline links di markdown content (mis. "klik [Modul 1](/modul/01-fondasi)")
+    // akan 404 di GitHub Pages karena tidak ada file fisik — fallback ini route
+    // ke SPA dengan slug yang benar. Optional: append &track= dari path-2 segment.
+    (function () {
+      var path = location.pathname;
+      var m = path.match(/^\/modul\/([^\/]+)\/?$/);
+      if (m && m[1] !== "index.html") {
+        var slug = decodeURIComponent(m[1]);
+        var qs = location.search ? location.search + "&slug=" + slug : "?slug=" + slug;
+        location.replace("/modul/" + qs);
+      }
+    })();
+  </script>
 </head>
 <body class="bg-base-100 min-h-screen flex items-center justify-center px-4">
   <main class="text-center max-w-md">
