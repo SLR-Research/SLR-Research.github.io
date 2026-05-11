@@ -44,9 +44,10 @@
       const ct = res.headers.get("Content-Type") || "";
       const data = ct.includes("application/json") ? await res.json() : await res.text();
 
-      // 409 dengan field `redirect` = backend minta navigasi (e.g. select-track
-      // belum dipilih). Auto-follow biar UX smooth.
-      if (res.status === 409 && data && data.redirect) {
+      // 409 atau 403 dengan field `redirect` = backend minta navigasi
+      // (e.g. select-track belum dipilih, atau belum ter-enroll). Auto-follow
+      // biar UX smooth. Caller bisa skip via { noFollow: true } di options.
+      if ((res.status === 409 || res.status === 403) && data && data.redirect) {
         window.location.href = data.redirect;
         return;
       }

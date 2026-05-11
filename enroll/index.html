@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enroll Track — SLR AI Guide</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23B19CD8%27 stroke-width=%272%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253%27/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-200">
+
+<div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300">
+
+  <!-- Mini Navbar -->
+  <nav class="navbar bg-base-100 border-b border-base-200 sticky top-0 z-40">
+    <div class="flex-1 px-4">
+      <a href="/" class="flex items-center" aria-label="SLR AI Guide">
+        <img src="/assets/images/logo-rpi.png" alt="RPI Institute" class="h-8 w-auto">
+      </a>
+    </div>
+    <div class="flex-none gap-2 px-4">
+      <span class="text-sm hidden sm:inline opacity-70">Hai, <span id="userName">—</span></span>
+      <a href="/select-track/" class="btn btn-ghost btn-sm">
+        <span class="material-symbols-outlined text-sm">arrow_back</span>
+        <span class="hidden sm:inline ml-1">Pilih Track</span>
+      </a>
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">
+        <span class="material-symbols-outlined text-sm">logout</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-4 py-12 max-w-2xl">
+
+    <div class="text-center mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold mb-2">Enroll Track</h1>
+      <p class="opacity-70">Pilih track yang ingin Anda akses. Anda bisa enroll lebih dari satu track.</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+
+        <!-- Status alerts -->
+        <div id="errorAlert" class="hidden alert alert-error mb-4">
+          <span class="material-symbols-outlined">error</span>
+          <span id="errorMsg"></span>
+        </div>
+        <div id="successAlert" class="hidden alert alert-success mb-4">
+          <span class="material-symbols-outlined">check_circle</span>
+          <span id="successMsg"></span>
+        </div>
+
+        <form id="enrollForm" class="space-y-4">
+
+          <!-- Track Selection -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Track <span class="text-error">*</span></span>
+            </label>
+            <div id="trackOptions" class="grid grid-cols-1 gap-2">
+              <div class="text-sm opacity-50 py-3">Memuat...</div>
+            </div>
+          </div>
+
+          <!-- Invite Code -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Kode Undangan <span class="text-base-content/50 text-xs">(opsional)</span></span>
+            </label>
+            <input type="text" name="invite_code" placeholder="Misal: ABCD1234" class="input input-bordered w-full font-mono uppercase" autocomplete="off" maxlength="32" oninput="this.value=this.value.toUpperCase()">
+            <label class="label">
+              <span class="label-text-alt text-base-content/50">
+                Dengan kode → trial 7 hari aktif langsung. Tanpa kode → menunggu admin approve.
+              </span>
+            </label>
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn btn-primary w-full">
+            <span class="material-symbols-outlined text-sm">add_circle</span>
+            Enroll Track Ini
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Current enrollments -->
+    <div class="card bg-base-100 mt-6 border border-base-200">
+      <div class="card-body">
+        <h2 class="font-semibold mb-3">Track yang Sudah Anda Enroll</h2>
+        <div id="enrollList" class="space-y-2 text-sm">
+          <div class="opacity-50">Memuat...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/api.js"></script>
+<script>
+Auth.requireProfile();
+
+const user = Auth.getUser() || {};
+document.getElementById("userName").textContent = user.name || "";
+document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+
+const errAlert = document.getElementById("errorAlert");
+const errMsg = document.getElementById("errorMsg");
+const successAlert = document.getElementById("successAlert");
+const successMsg = document.getElementById("successMsg");
+const submitBtn = document.getElementById("submitBtn");
+
+const preselectedTrack = new URLSearchParams(location.search).get("track") || "";
+
+function trackLabel(slug) {
+  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review" };
+  return map[slug] || slug;
+}
+
+function fmtDate(s) {
+  if (!s) return "—";
+  try { return new Date(s).toLocaleDateString("id-ID", {day:"2-digit",month:"short",year:"numeric"}); } catch { return s; }
+}
+
+function showError(msg) {
+  successAlert.classList.add("hidden");
+  errMsg.textContent = msg;
+  errAlert.classList.remove("hidden");
+}
+function showSuccess(msg) {
+  errAlert.classList.add("hidden");
+  successMsg.textContent = msg;
+  successAlert.classList.remove("hidden");
+}
+
+async function loadTracksAndEnrollments() {
+  try {
+    const [tracksRes, enrollRes] = await Promise.all([
+      Api.get("/api/tracks"),
+      Api.get("/api/enrollments"),
+    ]);
+    const tracks = tracksRes.tracks || [];
+    const enrolledTracks = new Set((enrollRes.enrollments || []).map(e => e.track));
+
+    // Render track options — disable yang sudah di-enroll
+    const container = document.getElementById("trackOptions");
+    container.innerHTML = "";
+    let hasAvailable = false;
+    tracks.forEach((t) => {
+      const id = "track-" + t.slug;
+      const isEnrolled = enrolledTracks.has(t.slug);
+      const accent = t.accent || "primary";
+      const label = document.createElement("label");
+      label.htmlFor = id;
+      label.className = "flex items-start gap-3 p-3 border-2 rounded-lg transition " +
+        (isEnrolled
+          ? "border-base-200 opacity-50 cursor-not-allowed"
+          : "border-base-200 cursor-pointer hover:border-" + accent + "/50 has-[:checked]:border-" + accent + " has-[:checked]:bg-" + accent + "/5");
+      const shouldCheck = !isEnrolled && (t.slug === preselectedTrack);
+      label.innerHTML = `
+        <input type="radio" name="track" id="${id}" value="${t.slug}" class="radio radio-${accent} mt-1" ${isEnrolled ? "disabled" : ""} ${shouldCheck ? "checked" : ""}>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="material-symbols-outlined text-${accent}"></span>
+            <span class="font-semibold" data-title></span>
+            ${t.recommended ? '<span class="badge badge-primary badge-sm">Recommended</span>' : ""}
+            ${isEnrolled ? '<span class="badge badge-ghost badge-sm">Sudah ter-enroll</span>' : ""}
+          </div>
+          <p class="text-xs text-base-content/60 mt-1" data-subtitle></p>
+        </div>`;
+      label.querySelector(".material-symbols-outlined").textContent = t.icon || "school";
+      label.querySelector("[data-title]").textContent = t.title;
+      label.querySelector("[data-subtitle]").textContent = t.subtitle || "";
+      container.appendChild(label);
+      if (!isEnrolled) hasAvailable = true;
+    });
+
+    if (!hasAvailable) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Sudah enroll di semua track tersedia';
+    }
+
+    // Render existing enrollments
+    const listEl = document.getElementById("enrollList");
+    const enrolls = enrollRes.enrollments || [];
+    if (enrolls.length === 0) {
+      listEl.innerHTML = '<div class="opacity-50">Belum ada enrollment.</div>';
+    } else {
+      listEl.innerHTML = "";
+      enrolls.forEach(e => {
+        const div = document.createElement("div");
+        div.className = "flex items-center justify-between p-2 rounded bg-base-200/50";
+        const statusBadge = (() => {
+          const m = {
+            pending: ["badge-warning", "Menunggu"],
+            trial: ["badge-info", "Trial"],
+            approved: ["badge-success", "Aktif"],
+          };
+          const [cls, label] = m[e.status] || m.pending;
+          let extra = "";
+          if (e.status === "trial" && e.trial_ends_at) {
+            extra = ` <span class="text-xs opacity-60">(s/d ${fmtDate(e.trial_ends_at)})</span>`;
+          }
+          return `<span class="badge ${cls} badge-sm">${label}</span>${extra}`;
+        })();
+        div.innerHTML = `<span data-label></span><div>${statusBadge}</div>`;
+        div.querySelector("[data-label]").textContent = trackLabel(e.track);
+        listEl.appendChild(div);
+      });
+    }
+  } catch (err) {
+    showError("Gagal memuat data: " + (err.message || ""));
+  }
+}
+
+document.getElementById("enrollForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errAlert.classList.add("hidden");
+  successAlert.classList.add("hidden");
+  const fd = new FormData(e.target);
+  const track = fd.get("track");
+  if (!track) {
+    showError("Pilih track terlebih dahulu");
+    return;
+  }
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Memproses...';
+  try {
+    const res = await Api.post("/api/enroll", {
+      track,
+      invite_code: (fd.get("invite_code") || "").trim(),
+    });
+    showSuccess(res.message || "Enrollment berhasil");
+    // Refresh daftar
+    setTimeout(loadTracksAndEnrollments, 500);
+    // Reset invite_code field
+    e.target.querySelector("[name=invite_code]").value = "";
+  } catch (err) {
+    showError(err.message || "Gagal enroll");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<span class="material-symbols-outlined text-sm">add_circle</span> Enroll Track Ini';
+  }
+});
+
+loadTracksAndEnrollments();
+</script>
+</body>
+</html>

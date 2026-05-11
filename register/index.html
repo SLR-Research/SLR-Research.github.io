@@ -8,6 +8,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
 
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
@@ -23,7 +24,7 @@
       <div class="text-center mb-6">
         <img src="/assets/images/logo-rpi.png" alt="RPI Institute" class="h-12 w-auto mx-auto mb-3">
         <h1 class="text-xl font-bold">Daftar Akun</h1>
-        <p class="text-base-content/60 text-sm mt-1">Buat akun untuk mengakses seluruh modul SLR</p>
+        <p class="text-base-content/60 text-sm mt-1">Buat akun untuk mengakses modul SLR/Scoping Review</p>
       </div>
 
       <!-- Error message -->
@@ -49,7 +50,31 @@
         <div class="form-control">
           <label class="label"><span class="label-text font-medium">Afiliasi / Institusi <span class="text-error">*</span></span></label>
           <input type="text" name="affiliation" placeholder="Universitas Indonesia" class="input input-bordered w-full" required minlength="2" autocomplete="organization">
-          <label class="label"><span class="label-text-alt text-base-content/50">Wajib — Nama universitas atau institusi Anda</span></label>
+        </div>
+
+        <!-- Track Selection -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Track Pembelajaran <span class="text-error">*</span></span>
+          </label>
+          <div id="trackOptions" class="grid grid-cols-1 gap-2">
+            <!-- Track radio cards di-inject via JS dari /api/tracks -->
+            <div class="text-sm text-base-content/50 px-2 py-3">Memuat daftar track...</div>
+          </div>
+          <label class="label"><span class="label-text-alt text-base-content/50">Pilih jenis review yang ingin dipelajari</span></label>
+        </div>
+
+        <!-- Invite Code (optional) -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Kode Undangan <span class="text-base-content/50 text-xs">(opsional)</span></span>
+          </label>
+          <input type="text" name="invite_code" placeholder="Misal: ABCD1234" class="input input-bordered w-full font-mono uppercase" autocomplete="off" maxlength="32" oninput="this.value=this.value.toUpperCase()">
+          <label class="label">
+            <span class="label-text-alt text-base-content/50">
+              Dengan kode → langsung akses (trial 7 hari). Tanpa kode → menunggu verifikasi admin.
+            </span>
+          </label>
         </div>
 
         <div class="form-control">
@@ -67,6 +92,9 @@
 
       <div class="divider text-xs">atau daftar dengan</div>
       <div id="googleSignIn" class="flex justify-center"></div>
+      <p class="text-xs text-base-content/50 text-center mt-2">
+        Catatan: Google Sign-In tidak include pilih track. Setelah login, Anda akan diminta enroll track.
+      </p>
 
       <div class="divider text-xs">Sudah punya akun?</div>
 
@@ -91,9 +119,42 @@ const submitBtn = document.getElementById("submitBtn");
 function showError(msg) {
   errMsg.textContent = msg;
   errAlert.classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// Google SSO init (sama logic dengan login page).
+// Load track options dan render sebagai radio cards.
+(async function loadTracks() {
+  const container = document.getElementById("trackOptions");
+  try {
+    const data = await Api.get("/api/tracks");
+    container.innerHTML = "";
+    (data.tracks || []).forEach((t, i) => {
+      const id = "track-" + t.slug;
+      const accent = t.accent || "primary";
+      const label = document.createElement("label");
+      label.htmlFor = id;
+      label.className = "flex items-start gap-3 p-3 border-2 border-base-200 rounded-lg cursor-pointer hover:border-" + accent + "/50 has-[:checked]:border-" + accent + " has-[:checked]:bg-" + accent + "/5 transition";
+      label.innerHTML = `
+        <input type="radio" name="track" id="${id}" value="${t.slug}" class="radio radio-${accent} mt-1" ${i === 0 ? "required" : ""}>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="material-symbols-outlined text-${accent}"></span>
+            <span class="font-semibold" data-title></span>
+            ${t.recommended ? '<span class="badge badge-primary badge-sm">Recommended</span>' : ""}
+          </div>
+          <p class="text-xs text-base-content/60 mt-1" data-subtitle></p>
+        </div>`;
+      label.querySelector(".material-symbols-outlined").textContent = t.icon || "school";
+      label.querySelector("[data-title]").textContent = t.title;
+      label.querySelector("[data-subtitle]").textContent = t.subtitle || "";
+      container.appendChild(label);
+    });
+  } catch (err) {
+    container.innerHTML = '<div class="alert alert-error text-sm">Gagal memuat daftar track: ' + (err.message || "") + "</div>";
+  }
+})();
+
+// Google SSO init (tidak include track — user enroll terpisah setelah login).
 function initGoogleSSO() {
   const clientId = window.GOOGLE_CLIENT_ID;
   if (!clientId || !window.google || !google.accounts) return;
@@ -106,7 +167,9 @@ function initGoogleSSO() {
         if (data && data.token) {
           Auth.setToken(data.token);
           if (data.user) Auth.setUser(data.user);
-          location.href = Auth.nextDest();
+          // SSO user tidak set track — kirim ke select-track yang akan
+          // redirect ke /enroll/ kalau belum punya enrollment.
+          location.href = data.redirect || "/select-track/";
         } else { showError("Response Google login tidak valid"); }
       } catch (err) { showError(err.message || "Google login gagal"); }
     },
@@ -123,6 +186,10 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   errAlert.classList.add("hidden");
   const fd = new FormData(form);
+  if (!fd.get("track")) {
+    showError("Pilih track terlebih dahulu");
+    return;
+  }
   if (fd.get("password") !== fd.get("confirm_password")) {
     showError("Konfirmasi password tidak cocok");
     return;
@@ -135,11 +202,15 @@ form.addEventListener("submit", async (e) => {
       email: fd.get("email"),
       affiliation: fd.get("affiliation") || "",
       password: fd.get("password"),
+      track: fd.get("track"),
+      invite_code: (fd.get("invite_code") || "").trim(),
     });
     if (res && res.token) {
       Auth.setToken(res.token);
       if (res.user) Auth.setUser(res.user);
-      location.href = Auth.nextDest();
+      // Backend memberikan redirect spesifik berdasar status enrollment
+      // (trial → /home, pending → /pending-approval).
+      location.href = res.redirect || Auth.nextDest();
     } else {
       showError("Response tidak valid dari server");
     }

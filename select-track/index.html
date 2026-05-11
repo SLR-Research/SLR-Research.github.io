@@ -48,8 +48,7 @@
 
       <h1 class="text-4xl md:text-5xl font-bold mb-3">Pilih Track Pembelajaran Anda</h1>
       <p class="text-lg opacity-70 max-w-2xl mx-auto">
-        Tentukan jenis review penelitian yang ingin Anda kerjakan. Anda bisa
-        switch kapan saja — progress per-track terjaga.
+        Pilih track yang ingin Anda akses. Anda bisa enroll lebih dari satu track dengan akun yang sama.
       </p>
     </div>
 
@@ -61,7 +60,7 @@
       <span class="material-symbols-outlined">info</span>
       <div class="text-sm">
         <strong>Catatan:</strong> Progress Anda di setiap track tersimpan terpisah.
-        Switch track tidak akan menghilangkan progress yang sudah dicapai di track lain.
+        Track yang belum ter-enroll → klik <em>Enroll</em> untuk mendaftar (dengan atau tanpa kode undangan).
       </div>
     </div>
   </main>
@@ -97,23 +96,82 @@ function showToast(msg, type) {
   setTimeout(() => div.remove(), 3000);
 }
 
+function fmtDate(s) {
+  if (!s) return "—";
+  try { return new Date(s).toLocaleDateString("id-ID", {day:"2-digit",month:"short",year:"numeric"}); } catch { return s; }
+}
+
+// hasFullAccess client-side cek — mirror logic backend HasFullAccess.
+function hasFullAccess(e, now) {
+  if (!e) return false;
+  if (e.status === "approved") return true;
+  if (e.status === "trial" && e.trial_ends_at) {
+    return new Date(e.trial_ends_at) > now;
+  }
+  return false;
+}
+
 (async function loadTracks() {
-  let data;
+  let tracksData, enrollData;
   try {
-    data = await Api.get("/api/tracks");
+    [tracksData, enrollData] = await Promise.all([
+      Api.get("/api/tracks"),
+      Api.get("/api/enrollments"),
+    ]);
   } catch (err) {
-    showToast("Gagal memuat tracks: " + err.message, "error");
+    showToast("Gagal memuat data: " + err.message, "error");
     return;
   }
 
-  const grid = document.getElementById("tracksGrid");
-  (data.tracks || []).forEach((t) => {
-    const isActive = currentTrack === t.slug;
-    const card = document.createElement("div");
-    card.className = "card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 hover:-translate-y-1 " +
-      (isActive ? "border-success" : (t.recommended ? "border-primary" : "border-transparent"));
+  const enrollByTrack = {};
+  (enrollData.enrollments || []).forEach(e => { enrollByTrack[e.track] = e; });
+  const now = new Date();
 
+  const grid = document.getElementById("tracksGrid");
+  (tracksData.tracks || []).forEach((t) => {
+    const enrollment = enrollByTrack[t.slug];
+    const accessible = hasFullAccess(enrollment, now);
+    const isActive = currentTrack === t.slug && accessible;
     const accent = t.accent || "primary";
+
+    // Tentukan badge dan tombol action
+    let stateBadge = "";
+    let actionBtn = "";
+
+    if (!enrollment) {
+      // Belum enroll
+      actionBtn = `<a href="/enroll/?track=${t.slug}" class="btn btn-outline btn-block">
+        <span class="material-symbols-outlined text-sm">add</span> Enroll Track Ini
+      </a>`;
+    } else if (enrollment.status === "pending") {
+      stateBadge = `<span class="badge badge-warning gap-1"><span class="material-symbols-outlined text-xs">hourglass_empty</span> Menunggu Verifikasi</span>`;
+      actionBtn = `<a href="/pending-approval/" class="btn btn-outline btn-block">
+        <span class="material-symbols-outlined text-sm">visibility</span> Lihat Status
+      </a>`;
+    } else if (enrollment.status === "trial" && !accessible) {
+      stateBadge = `<span class="badge badge-error gap-1"><span class="material-symbols-outlined text-xs">schedule</span> Trial Habis</span>`;
+      actionBtn = `<a href="/pending-approval/?status=trial-expired" class="btn btn-outline btn-error btn-block">
+        <span class="material-symbols-outlined text-sm">contact_support</span> Minta Approve
+      </a>`;
+    } else if (enrollment.status === "trial" && accessible) {
+      stateBadge = `<span class="badge badge-info gap-1"><span class="material-symbols-outlined text-xs">schedule</span> Trial s/d ${fmtDate(enrollment.trial_ends_at)}</span>`;
+      actionBtn = isActive
+        ? `<a href="/modul/?slug=home" class="btn btn-success btn-block"><span class="material-symbols-outlined text-sm">arrow_forward</span> Lanjutkan</a>`
+        : `<button class="btn btn-${accent} btn-block" data-track="${t.slug}"><span class="material-symbols-outlined text-sm">${currentTrack ? 'swap_horiz' : 'rocket_launch'}</span> ${currentTrack ? 'Switch' : 'Mulai'} Track Ini</button>`;
+    } else {
+      // approved
+      stateBadge = isActive
+        ? `<span class="badge badge-success gap-1"><span class="material-symbols-outlined text-xs">check</span> Aktif</span>`
+        : `<span class="badge badge-success badge-outline gap-1"><span class="material-symbols-outlined text-xs">check_circle</span> Disetujui</span>`;
+      actionBtn = isActive
+        ? `<a href="/modul/?slug=home" class="btn btn-success btn-block"><span class="material-symbols-outlined text-sm">arrow_forward</span> Lanjutkan</a>`
+        : `<button class="btn btn-${accent} btn-block" data-track="${t.slug}"><span class="material-symbols-outlined text-sm">${currentTrack ? 'swap_horiz' : 'rocket_launch'}</span> ${currentTrack ? 'Switch' : 'Mulai'} Track Ini</button>`;
+    }
+
+    const card = document.createElement("div");
+    const borderClass = isActive ? "border-success" : (!enrollment ? "border-base-200" : (t.recommended ? "border-primary" : "border-transparent"));
+    card.className = `card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 hover:-translate-y-1 ${borderClass}`;
+
     card.innerHTML = `
       <div class="card-body">
         <div class="flex justify-between items-start mb-2">
@@ -121,8 +179,8 @@ function showToast(msg, type) {
             <span class="material-symbols-outlined text-${accent} text-3xl"></span>
           </div>
           <div class="flex flex-col gap-1 items-end">
-            ${isActive ? '<span class="badge badge-success gap-1"><span class="material-symbols-outlined text-xs">check</span> Aktif</span>' : ''}
-            ${t.recommended ? '<span class="badge badge-primary gap-1"><span class="material-symbols-outlined text-xs">star</span> Recommended</span>' : ''}
+            ${stateBadge}
+            ${t.recommended ? '<span class="badge badge-primary badge-sm gap-1"><span class="material-symbols-outlined text-xs">star</span> Recommended</span>' : ''}
           </div>
         </div>
         <h2 class="card-title text-xl"></h2>
@@ -138,12 +196,9 @@ function showToast(msg, type) {
             <span data-modulecount></span>
           </div>
         </div>
-        <div class="card-actions justify-end mt-4">
-          ${isActive
-            ? `<a href="/modul/?slug=home" class="btn btn-success btn-block"><span class="material-symbols-outlined text-sm">arrow_forward</span> Lanjutkan</a>`
-            : `<button class="btn btn-${accent} btn-block" data-track="${t.slug}"><span class="material-symbols-outlined text-sm">${currentTrack ? 'swap_horiz' : 'rocket_launch'}</span> ${currentTrack ? 'Switch ke Track Ini' : 'Mulai Track Ini'}</button>`}
-        </div>
+        <div class="card-actions justify-end mt-4">${actionBtn}</div>
       </div>`;
+
     // Inject text safely (textContent untuk avoid XSS dari API).
     const icons = card.querySelectorAll("span.material-symbols-outlined");
     icons[0].textContent = t.icon || "school";
@@ -155,6 +210,7 @@ function showToast(msg, type) {
     grid.appendChild(card);
   });
 
+  // Wire switch buttons
   grid.querySelectorAll("[data-track]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const track = btn.dataset.track;

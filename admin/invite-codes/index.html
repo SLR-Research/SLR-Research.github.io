@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · Invite Codes — SLR AI Guide</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23B19CD8%27 stroke-width=%272%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253%27/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-100">
+
+<div class="navbar bg-base-100 border-b border-base-200 sticky top-0 z-40">
+  <div class="flex-1">
+    <a href="/admin/dashboard/" class="flex items-center gap-2 px-4">
+      <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+      <span class="font-bold text-lg">Admin Panel</span>
+    </a>
+  </div>
+  <div class="flex-none">
+    <ul class="menu menu-horizontal px-1 gap-1">
+      <li><a href="/admin/dashboard/"><span class="material-symbols-outlined text-sm">dashboard</span> Dashboard</a></li>
+      <li><a href="/admin/users/"><span class="material-symbols-outlined text-sm">group</span> Users</a></li>
+      <li><a href="/admin/enrollments/"><span class="material-symbols-outlined text-sm">how_to_reg</span> Enrollments</a></li>
+      <li><a href="/admin/invite-codes/" class="active"><span class="material-symbols-outlined text-sm">vpn_key</span> Invite Codes</a></li>
+      <li><a href="/admin/progress/"><span class="material-symbols-outlined text-sm">trending_up</span> Progress</a></li>
+    </ul>
+    <div class="divider divider-horizontal mx-0"></div>
+    <div class="flex items-center gap-2 px-2">
+      <div class="avatar placeholder">
+        <div class="bg-neutral text-neutral-content rounded-full w-8">
+          <span class="text-xs font-bold" id="userInitials">—</span>
+        </div>
+      </div>
+      <span class="text-sm font-medium hidden sm:inline" id="userName">—</span>
+    </div>
+    <a href="/modul/?slug=home" class="btn btn-ghost btn-sm" title="Kembali ke App">
+      <span class="material-symbols-outlined text-sm">arrow_back</span>
+    </a>
+    <button id="logoutBtn" class="btn btn-ghost btn-sm" title="Logout">
+      <span class="material-symbols-outlined text-sm">logout</span>
+    </button>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Invite Codes</h1>
+      <p class="text-sm text-base-content/60">Generate kode untuk fast-track user ke status trial</p>
+    </div>
+    <button class="btn btn-primary gap-2" onclick="document.getElementById('createModal').showModal()">
+      <span class="material-symbols-outlined">add</span> Generate Kode Baru
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex gap-2 mb-4 flex-wrap">
+    <select id="filterTrack" class="select select-sm select-bordered">
+      <option value="">Semua track</option>
+      <option value="slr">SLR AI</option>
+      <option value="slr-cowork">SLR + AI Cowork</option>
+      <option value="scoping">Scoping Review</option>
+    </select>
+    <select id="filterActive" class="select select-sm select-bordered">
+      <option value="">Aktif & Nonaktif</option>
+      <option value="true">Hanya Aktif</option>
+      <option value="false">Hanya Nonaktif</option>
+    </select>
+  </div>
+
+  <div id="errorState" class="hidden alert alert-error mb-4 text-sm"></div>
+  <div id="successToast" class="hidden alert alert-success mb-4 text-sm"></div>
+
+  <div class="card bg-base-100 border border-base-200">
+    <div class="card-body p-0">
+      <div id="loading" class="text-center py-12 opacity-60">Memuat...</div>
+      <div id="emptyState" class="hidden text-center py-12">
+        <span class="material-symbols-outlined text-5xl text-base-content/20 mb-4">key_off</span>
+        <p class="text-base-content/50">Belum ada invite code.</p>
+        <p class="text-xs text-base-content/40 mt-2">Klik "Generate Kode Baru" untuk membuat kode pertama.</p>
+      </div>
+      <div id="tableWrap" class="hidden overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Track</th>
+              <th>Status</th>
+              <th>Pemakaian</th>
+              <th>Trial Days</th>
+              <th>Expires</th>
+              <th>Notes</th>
+              <th>Dibuat</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<dialog id="createModal" class="modal">
+  <div class="modal-box max-w-md">
+    <h3 class="font-bold text-lg mb-4">Generate Invite Code</h3>
+
+    <form id="createForm" class="space-y-3">
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Track <span class="text-error">*</span></span></label>
+        <select name="track" class="select select-bordered" required>
+          <option value="">— Pilih track —</option>
+          <option value="slr">SLR AI</option>
+          <option value="slr-cowork">SLR + AI Cowork</option>
+          <option value="scoping">Scoping Review</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Code <span class="text-base-content/50 text-xs">(kosong = auto-generate)</span></span></label>
+        <input type="text" name="code" class="input input-bordered font-mono uppercase" placeholder="Misal: KELASA2026" maxlength="32" oninput="this.value=this.value.toUpperCase()">
+        <label class="label"><span class="label-text-alt text-base-content/50">A-Z dan 0-9, 4-32 karakter</span></label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Max Pemakaian</span></label>
+          <input type="number" name="max_uses" class="input input-bordered" placeholder="0 = unlimited" min="0" value="0">
+        </div>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Trial Days</span></label>
+          <input type="number" name="trial_days" class="input input-bordered" placeholder="7" min="1" max="365" value="7">
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Expires <span class="text-base-content/50 text-xs">(opsional)</span></span></label>
+        <input type="datetime-local" name="expires_at" class="input input-bordered">
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Notes <span class="text-base-content/50 text-xs">(opsional)</span></span></label>
+        <input type="text" name="notes" class="input input-bordered" placeholder="Misal: Kelas Metpen 2026A">
+      </div>
+
+      <div id="createError" class="hidden alert alert-error text-sm"></div>
+
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="document.getElementById('createModal').close()">Batal</button>
+        <button type="submit" id="createBtn" class="btn btn-primary">Generate</button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<!-- Code Detail Modal (untuk copy ke clipboard) -->
+<dialog id="codeDetailModal" class="modal">
+  <div class="modal-box max-w-md">
+    <h3 class="font-bold text-lg mb-3">Kode Berhasil Dibuat</h3>
+    <p class="text-sm opacity-70 mb-4">Share kode ini ke user. Mereka bisa pakai saat register atau di halaman /enroll.</p>
+
+    <div class="join w-full">
+      <input id="newCodeValue" readonly class="input input-bordered input-lg font-mono text-center join-item flex-1 font-bold tracking-wider" value="">
+      <button id="copyCodeBtn" class="btn btn-primary btn-lg join-item gap-1">
+        <span class="material-symbols-outlined">content_copy</span> Copy
+      </button>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-primary" onclick="document.getElementById('codeDetailModal').close()">Tutup</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/api.js"></script>
+<script>
+Auth.requireProfile();
+const u = Auth.getUser() || {};
+document.getElementById("userName").textContent = u.name || "—";
+document.getElementById("userInitials").textContent = (u.name || "?").slice(0,2).toUpperCase();
+document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+
+function fmtDate(s) {
+  if (!s) return "—";
+  try { return new Date(s).toLocaleDateString("id-ID", {day:"2-digit",month:"short",year:"numeric"}); } catch { return s; }
+}
+function fmtDateTime(s) {
+  if (!s) return "—";
+  try { return new Date(s).toLocaleString("id-ID", {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch { return s; }
+}
+
+function trackLabel(slug) {
+  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review" };
+  return map[slug] || slug;
+}
+
+function showSuccess(msg) {
+  const t = document.getElementById("successToast");
+  t.textContent = msg;
+  t.classList.remove("hidden");
+  setTimeout(() => t.classList.add("hidden"), 4000);
+}
+function showError(msg) {
+  const e = document.getElementById("errorState");
+  e.textContent = msg;
+  e.classList.remove("hidden");
+  setTimeout(() => e.classList.add("hidden"), 5000);
+}
+
+async function loadCodes() {
+  const loading = document.getElementById("loading");
+  const tableWrap = document.getElementById("tableWrap");
+  const emptyState = document.getElementById("emptyState");
+
+  loading.classList.remove("hidden");
+  tableWrap.classList.add("hidden");
+  emptyState.classList.add("hidden");
+
+  const params = new URLSearchParams();
+  const track = document.getElementById("filterTrack").value;
+  const active = document.getElementById("filterActive").value;
+  if (track) params.set("track", track);
+  if (active) params.set("active", active);
+  const qs = params.toString() ? "?" + params.toString() : "";
+
+  try {
+    const data = await Api.get("/admin/invite-codes" + qs);
+    loading.classList.add("hidden");
+    const codes = data.invite_codes || [];
+    if (codes.length === 0) {
+      emptyState.classList.remove("hidden");
+      return;
+    }
+    const tbody = document.getElementById("rows");
+    tbody.innerHTML = "";
+    codes.forEach(c => {
+      const tr = document.createElement("tr");
+      tr.className = c.is_active ? "" : "opacity-50";
+      const usage = c.max_uses > 0 ? `${c.used_count}/${c.max_uses}` : `${c.used_count}`;
+      tr.innerHTML = `
+        <td><span class="font-mono font-bold" data-code></span></td>
+        <td><span class="badge badge-ghost badge-sm" data-track></span></td>
+        <td><span class="badge badge-sm" data-status></span></td>
+        <td class="text-sm" data-usage></td>
+        <td class="text-sm" data-days></td>
+        <td class="text-sm text-base-content/70" data-expires></td>
+        <td class="text-sm text-base-content/70" data-notes></td>
+        <td class="text-xs text-base-content/60" data-created></td>
+        <td>
+          <button class="btn btn-ghost btn-xs gap-1" data-copy title="Copy code"><span class="material-symbols-outlined" style="font-size:16px">content_copy</span></button>
+          <button class="btn btn-ghost btn-xs gap-1" data-toggle><span class="material-symbols-outlined" style="font-size:16px"></span></button>
+        </td>`;
+      tr.querySelector("[data-code]").textContent = c.code;
+      tr.querySelector("[data-track]").textContent = trackLabel(c.track);
+      const statusBadge = tr.querySelector("[data-status]");
+      statusBadge.textContent = c.is_active ? "Aktif" : "Nonaktif";
+      statusBadge.className += " " + (c.is_active ? "badge-success" : "badge-error");
+      tr.querySelector("[data-usage]").textContent = usage + (c.max_uses === 0 ? " (unlimited)" : "");
+      tr.querySelector("[data-days]").textContent = (c.trial_days || 7) + " hari";
+      tr.querySelector("[data-expires]").textContent = c.expires_at ? fmtDate(c.expires_at) : "—";
+      tr.querySelector("[data-notes]").textContent = c.notes || "—";
+      tr.querySelector("[data-created]").textContent = fmtDateTime(c.created_at);
+
+      const copyBtn = tr.querySelector("[data-copy]");
+      copyBtn.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(c.code); showSuccess("Code disalin: " + c.code); }
+        catch { showError("Gagal copy clipboard"); }
+      });
+
+      const toggleBtn = tr.querySelector("[data-toggle]");
+      const toggleIcon = toggleBtn.querySelector(".material-symbols-outlined");
+      toggleIcon.textContent = c.is_active ? "toggle_on" : "toggle_off";
+      toggleBtn.title = c.is_active ? "Nonaktifkan" : "Aktifkan";
+      toggleBtn.addEventListener("click", async () => {
+        if (!confirm((c.is_active ? "Nonaktifkan" : "Aktifkan") + " kode " + c.code + "?")) return;
+        try {
+          await Api.post(`/admin/invite-codes/${c.id}/toggle`);
+          showSuccess("Status kode diubah");
+          loadCodes();
+        } catch (err) { showError("Gagal: " + err.message); }
+      });
+
+      tbody.appendChild(tr);
+    });
+    tableWrap.classList.remove("hidden");
+  } catch (err) {
+    loading.classList.add("hidden");
+    showError(err.status === 403 ? "Akses admin diperlukan" : (err.message || "Gagal memuat kode"));
+  }
+}
+
+document.getElementById("filterTrack").addEventListener("change", loadCodes);
+document.getElementById("filterActive").addEventListener("change", loadCodes);
+
+document.getElementById("createForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const errBox = document.getElementById("createError");
+  errBox.classList.add("hidden");
+
+  const body = {
+    track: fd.get("track"),
+    code: (fd.get("code") || "").trim(),
+    notes: fd.get("notes") || "",
+    max_uses: parseInt(fd.get("max_uses") || "0", 10),
+    trial_days: parseInt(fd.get("trial_days") || "7", 10),
+  };
+  const exp = fd.get("expires_at");
+  if (exp) body.expires_at = new Date(exp).toISOString();
+
+  const btn = document.getElementById("createBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Menyimpan...';
+  try {
+    const res = await Api.post("/admin/invite-codes", body);
+    document.getElementById("createModal").close();
+    e.target.reset();
+
+    // Show generated code modal
+    const newCode = res.invite_code?.code || "";
+    document.getElementById("newCodeValue").value = newCode;
+    document.getElementById("codeDetailModal").showModal();
+    loadCodes();
+  } catch (err) {
+    errBox.textContent = err.message || "Gagal create";
+    errBox.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Generate";
+  }
+});
+
+document.getElementById("copyCodeBtn").addEventListener("click", async () => {
+  const val = document.getElementById("newCodeValue").value;
+  try { await navigator.clipboard.writeText(val); showSuccess("Code disalin: " + val); }
+  catch { showError("Gagal copy clipboard"); }
+});
+
+loadCodes();
+</script>
+</body>
+</html>

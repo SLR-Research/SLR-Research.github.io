@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · Enrollments — SLR AI Guide</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23B19CD8%27 stroke-width=%272%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253%27/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-100">
+
+<div class="navbar bg-base-100 border-b border-base-200 sticky top-0 z-40">
+  <div class="flex-1">
+    <a href="/admin/dashboard/" class="flex items-center gap-2 px-4">
+      <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+      <span class="font-bold text-lg">Admin Panel</span>
+    </a>
+  </div>
+  <div class="flex-none">
+    <ul class="menu menu-horizontal px-1 gap-1">
+      <li><a href="/admin/dashboard/"><span class="material-symbols-outlined text-sm">dashboard</span> Dashboard</a></li>
+      <li><a href="/admin/users/"><span class="material-symbols-outlined text-sm">group</span> Users</a></li>
+      <li><a href="/admin/enrollments/" class="active"><span class="material-symbols-outlined text-sm">how_to_reg</span> Enrollments</a></li>
+      <li><a href="/admin/invite-codes/"><span class="material-symbols-outlined text-sm">vpn_key</span> Invite Codes</a></li>
+      <li><a href="/admin/progress/"><span class="material-symbols-outlined text-sm">trending_up</span> Progress</a></li>
+    </ul>
+    <div class="divider divider-horizontal mx-0"></div>
+    <div class="flex items-center gap-2 px-2">
+      <div class="avatar placeholder">
+        <div class="bg-neutral text-neutral-content rounded-full w-8">
+          <span class="text-xs font-bold" id="userInitials">—</span>
+        </div>
+      </div>
+      <span class="text-sm font-medium hidden sm:inline" id="userName">—</span>
+    </div>
+    <a href="/modul/?slug=home" class="btn btn-ghost btn-sm" title="Kembali ke App">
+      <span class="material-symbols-outlined text-sm">arrow_back</span>
+    </a>
+    <button id="logoutBtn" class="btn btn-ghost btn-sm" title="Logout">
+      <span class="material-symbols-outlined text-sm">logout</span>
+    </button>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Enrollments</h1>
+      <p class="text-sm text-base-content/60"><span id="enrollCount">—</span> enrollment ditampilkan</p>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="tabs tabs-boxed bg-base-200 inline-flex mb-4">
+    <button class="tab" data-filter="">Semua</button>
+    <button class="tab" data-filter="pending">Pending</button>
+    <button class="tab" data-filter="trial">Trial</button>
+    <button class="tab" data-filter="approved">Approved</button>
+  </div>
+
+  <select id="filterTrack" class="select select-sm select-bordered ml-2">
+    <option value="">Semua track</option>
+    <option value="slr">SLR AI</option>
+    <option value="slr-cowork">SLR + AI Cowork</option>
+    <option value="scoping">Scoping Review</option>
+  </select>
+
+  <div id="errorState" class="hidden alert alert-error my-4 text-sm"></div>
+  <div id="successToast" class="hidden alert alert-success my-4 text-sm"></div>
+
+  <div class="card bg-base-100 border border-base-200 mt-4">
+    <div class="card-body p-0">
+      <div id="loading" class="text-center py-12 opacity-60">Memuat...</div>
+      <div id="emptyState" class="hidden text-center py-12">
+        <span class="material-symbols-outlined text-5xl text-base-content/20 mb-4">inbox</span>
+        <p class="text-base-content/50">Tidak ada enrollment dengan filter ini.</p>
+      </div>
+      <div id="tableWrap" class="hidden overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Track</th>
+              <th>Status</th>
+              <th>Trial Sampai</th>
+              <th>Kode Dipakai</th>
+              <th>Daftar</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Set Trial Modal -->
+<dialog id="trialModal" class="modal">
+  <div class="modal-box max-w-sm">
+    <h3 class="font-bold text-lg mb-3">Set Trial</h3>
+    <p class="text-sm opacity-70 mb-4" id="trialContext"></p>
+
+    <div class="form-control">
+      <label class="label"><span class="label-text font-medium">Durasi Trial (hari)</span></label>
+      <input id="trialDays" type="number" class="input input-bordered" value="7" min="1" max="365">
+      <label class="label"><span class="label-text-alt text-base-content/50">TrialEndsAt akan di-set ke now + N hari</span></label>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn" onclick="document.getElementById('trialModal').close()">Batal</button>
+      <button id="confirmTrialBtn" class="btn btn-primary">Set Trial</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/api.js"></script>
+<script>
+Auth.requireProfile();
+const u = Auth.getUser() || {};
+document.getElementById("userName").textContent = u.name || "—";
+document.getElementById("userInitials").textContent = (u.name || "?").slice(0,2).toUpperCase();
+document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
+
+const initialStatus = new URLSearchParams(location.search).get("status") || "";
+
+function fmtDate(s) {
+  if (!s) return "—";
+  try { return new Date(s).toLocaleDateString("id-ID", {day:"2-digit",month:"short",year:"numeric"}); } catch { return s; }
+}
+function fmtDateTime(s) {
+  if (!s) return "—";
+  try { return new Date(s).toLocaleString("id-ID", {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch { return s; }
+}
+
+function trackLabel(slug) {
+  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review" };
+  return map[slug] || slug;
+}
+
+function showSuccess(msg) {
+  const t = document.getElementById("successToast");
+  t.textContent = msg;
+  t.classList.remove("hidden");
+  setTimeout(() => t.classList.add("hidden"), 4000);
+}
+function showError(msg) {
+  const e = document.getElementById("errorState");
+  e.textContent = msg;
+  e.classList.remove("hidden");
+  setTimeout(() => e.classList.add("hidden"), 5000);
+}
+
+let currentFilter = initialStatus;
+
+function setActiveTab() {
+  document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.classList.toggle("tab-active", btn.dataset.filter === currentFilter);
+  });
+}
+
+document.querySelectorAll('[data-filter]').forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentFilter = btn.dataset.filter;
+    setActiveTab();
+    loadEnrollments();
+  });
+});
+document.getElementById("filterTrack").addEventListener("change", loadEnrollments);
+
+async function loadEnrollments() {
+  const loading = document.getElementById("loading");
+  const tableWrap = document.getElementById("tableWrap");
+  const emptyState = document.getElementById("emptyState");
+
+  loading.classList.remove("hidden");
+  tableWrap.classList.add("hidden");
+  emptyState.classList.add("hidden");
+
+  const params = new URLSearchParams();
+  if (currentFilter) params.set("status", currentFilter);
+  const trackF = document.getElementById("filterTrack").value;
+  if (trackF) params.set("track", trackF);
+  const qs = params.toString() ? "?" + params.toString() : "";
+
+  try {
+    const data = await Api.get("/admin/enrollments" + qs);
+    loading.classList.add("hidden");
+    const enrolls = data.enrollments || [];
+    document.getElementById("enrollCount").textContent = enrolls.length;
+    if (enrolls.length === 0) {
+      emptyState.classList.remove("hidden");
+      return;
+    }
+    const tbody = document.getElementById("rows");
+    tbody.innerHTML = "";
+    enrolls.forEach(e => {
+      const tr = document.createElement("tr");
+      tr.className = "hover";
+      tr.innerHTML = `
+        <td>
+          <div class="font-medium" data-name></div>
+          <div class="text-xs text-base-content/60" data-email></div>
+          <div class="text-xs text-base-content/40" data-aff></div>
+        </td>
+        <td><span class="badge badge-ghost badge-sm" data-track></span></td>
+        <td data-statuscell></td>
+        <td class="text-sm" data-trial></td>
+        <td class="text-sm font-mono" data-code></td>
+        <td class="text-xs text-base-content/60" data-date></td>
+        <td><div class="flex gap-1" data-actions></div></td>`;
+
+      tr.querySelector("[data-name]").textContent = e.user_name || "(no name)";
+      tr.querySelector("[data-email]").textContent = e.user_email || "";
+      tr.querySelector("[data-aff]").textContent = e.user_affiliation || "";
+      tr.querySelector("[data-track]").textContent = trackLabel(e.track);
+
+      // Status cell
+      const statusCell = tr.querySelector("[data-statuscell]");
+      let statusBadge = "";
+      if (e.status === "pending") {
+        statusBadge = `<span class="badge badge-warning gap-1"><span class="material-symbols-outlined text-xs">hourglass_empty</span> Pending</span>`;
+      } else if (e.status === "trial" && e.is_expired_trial) {
+        statusBadge = `<span class="badge badge-error gap-1"><span class="material-symbols-outlined text-xs">history_toggle_off</span> Trial Expired</span>`;
+      } else if (e.status === "trial") {
+        statusBadge = `<span class="badge badge-info gap-1"><span class="material-symbols-outlined text-xs">schedule</span> Trial</span>`;
+      } else if (e.status === "approved") {
+        statusBadge = `<span class="badge badge-success gap-1"><span class="material-symbols-outlined text-xs">verified</span> Approved</span>`;
+      }
+      statusCell.innerHTML = statusBadge;
+
+      tr.querySelector("[data-trial]").textContent = e.trial_ends_at ? fmtDate(e.trial_ends_at) : "—";
+      tr.querySelector("[data-code]").textContent = e.used_invite_code || "—";
+      tr.querySelector("[data-date]").textContent = fmtDateTime(e.enrolled_at);
+
+      // Action buttons depend on status
+      const actions = tr.querySelector("[data-actions]");
+      if (e.status !== "approved") {
+        const approveBtn = document.createElement("button");
+        approveBtn.className = "btn btn-success btn-xs gap-1";
+        approveBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">check</span> Approve';
+        approveBtn.addEventListener("click", async () => {
+          if (!confirm(`Approve ${e.user_email} untuk track ${trackLabel(e.track)}?`)) return;
+          try {
+            await Api.post(`/admin/enrollments/${e.id}/approve`);
+            showSuccess("Berhasil di-approve");
+            loadEnrollments();
+          } catch (err) { showError("Gagal approve: " + err.message); }
+        });
+        actions.appendChild(approveBtn);
+      }
+
+      if (e.status === "pending" || (e.status === "trial" && e.is_expired_trial)) {
+        const trialBtn = document.createElement("button");
+        trialBtn.className = "btn btn-info btn-xs gap-1";
+        trialBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">schedule</span> Trial';
+        trialBtn.addEventListener("click", () => {
+          openTrialModal(e);
+        });
+        actions.appendChild(trialBtn);
+      }
+
+      if (e.status === "trial" && !e.is_expired_trial) {
+        const extendBtn = document.createElement("button");
+        extendBtn.className = "btn btn-ghost btn-xs gap-1";
+        extendBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">update</span> Extend';
+        extendBtn.title = "Reset trial deadline ke now+N hari";
+        extendBtn.addEventListener("click", () => openTrialModal(e));
+        actions.appendChild(extendBtn);
+      }
+
+      if (e.status === "approved" || e.status === "trial") {
+        const revokeBtn = document.createElement("button");
+        revokeBtn.className = "btn btn-error btn-outline btn-xs gap-1";
+        revokeBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">block</span>';
+        revokeBtn.title = "Revoke (kembalikan ke pending)";
+        revokeBtn.addEventListener("click", async () => {
+          if (!confirm(`Revoke akses ${e.user_email} di track ${trackLabel(e.track)}? Status akan kembali ke pending.`)) return;
+          try {
+            await Api.post(`/admin/enrollments/${e.id}/revoke`);
+            showSuccess("Berhasil revoke");
+            loadEnrollments();
+          } catch (err) { showError("Gagal revoke: " + err.message); }
+        });
+        actions.appendChild(revokeBtn);
+      }
+
+      tbody.appendChild(tr);
+    });
+    tableWrap.classList.remove("hidden");
+  } catch (err) {
+    loading.classList.add("hidden");
+    showError(err.status === 403 ? "Akses admin diperlukan" : (err.message || "Gagal memuat enrollment"));
+  }
+}
+
+let _activeTrialEnrollId = null;
+function openTrialModal(e) {
+  _activeTrialEnrollId = e.id;
+  document.getElementById("trialContext").textContent =
+    `${e.user_email} → track ${trackLabel(e.track)}`;
+  document.getElementById("trialDays").value = "7";
+  document.getElementById("trialModal").showModal();
+}
+
+document.getElementById("confirmTrialBtn").addEventListener("click", async () => {
+  const days = parseInt(document.getElementById("trialDays").value, 10) || 7;
+  if (!_activeTrialEnrollId) return;
+  try {
+    await Api.post(`/admin/enrollments/${_activeTrialEnrollId}/set-trial`, { days });
+    document.getElementById("trialModal").close();
+    showSuccess(`Trial di-set ${days} hari`);
+    loadEnrollments();
+  } catch (err) {
+    showError("Gagal set trial: " + err.message);
+  }
+});
+
+setActiveTab();
+loadEnrollments();
+</script>
+</body>
+</html>
