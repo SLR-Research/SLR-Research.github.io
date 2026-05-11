@@ -70,11 +70,16 @@
             <span class="label-text font-medium">Kode Undangan <span class="text-base-content/50 text-xs">(opsional)</span></span>
           </label>
           <input type="text" name="invite_code" placeholder="Misal: ABCD1234" class="input input-bordered w-full font-mono uppercase" autocomplete="off" maxlength="32" oninput="this.value=this.value.toUpperCase()">
-          <label class="label">
-            <span class="label-text-alt text-base-content/50">
-              Dengan kode → langsung akses (trial 7 hari). Tanpa kode → menunggu verifikasi admin.
-            </span>
-          </label>
+          <div class="mt-2 text-xs space-y-1 text-base-content/70">
+            <div class="flex gap-2">
+              <span class="material-symbols-outlined text-success" style="font-size:14px">check_circle</span>
+              <span><strong>Dengan kode:</strong> trial 7 hari, akses penuh ke semua modul</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="material-symbols-outlined text-warning" style="font-size:14px">visibility</span>
+              <span><strong>Tanpa kode:</strong> preview modul 1-2, akses penuh setelah admin approve</span>
+            </div>
+          </div>
         </div>
 
         <div class="form-control">
