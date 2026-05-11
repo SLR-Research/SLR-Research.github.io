@@ -305,10 +305,21 @@ const tm = TRACK_META[track] || { title: "—", icon: "school" };
 document.getElementById("track-title").textContent = tm.title;
 document.getElementById("track-icon").textContent = tm.icon;
 
-// Build track switcher dropdown
-(function buildTrackList() {
+// Build track switcher dropdown — hanya tampilkan enrolled tracks
+(async function buildTrackList() {
   const ul = document.getElementById("track-list");
-  Object.entries(TRACK_META).forEach(([slugT, m]) => {
+  let enrolledTracks;
+  try {
+    const data = await Api.get("/api/enrollments");
+    enrolledTracks = (data.enrollments || []).map((e) => e.track);
+  } catch (err) {
+    // Fallback: tampilkan current track only kalau API fail
+    enrolledTracks = track ? [track] : [];
+  }
+
+  ul.innerHTML = "";
+  enrolledTracks.forEach((slugT) => {
+    const m = TRACK_META[slugT] || { title: slugT, icon: "school" };
     const li = document.createElement("li");
     li.innerHTML = `<button class="flex items-start gap-2 py-2 ${slugT === track ? 'bg-primary/10' : ''}" data-track="${slugT}">
       <span class="material-symbols-outlined text-primary text-lg mt-0.5">${m.icon}</span>
@@ -319,6 +330,15 @@ document.getElementById("track-icon").textContent = tm.icon;
     </button>`;
     ul.appendChild(li);
   });
+
+  // CTA enroll track baru
+  const enrollLi = document.createElement("li");
+  enrollLi.innerHTML = `<a href="/enroll/" class="flex items-center gap-2 py-2 text-primary text-xs opacity-80 hover:opacity-100">
+    <span class="material-symbols-outlined text-base">add</span>
+    <span>Enroll track baru</span>
+  </a>`;
+  ul.appendChild(enrollLi);
+
   ul.querySelectorAll("[data-track]").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       e.preventDefault();

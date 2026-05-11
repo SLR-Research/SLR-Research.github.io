@@ -39,13 +39,16 @@
         <div class="card-body">
           <h2 class="card-title text-base">Jalur Belajar</h2>
           <p class="text-sm opacity-70 mb-3">Saat ini: <span id="currentTrack" class="font-medium">—</span></p>
-          <div class="flex flex-wrap gap-2">
-            <button class="btn btn-sm" data-track="slr">SLR</button>
-            <button class="btn btn-sm" data-track="slr-cowork">SLR Cowork</button>
-            <button class="btn btn-sm" data-track="scoping">Scoping</button>
-            <button class="btn btn-sm" data-track="buku">Buku</button>
+          <div id="trackButtons" class="flex flex-wrap gap-2">
+            <span class="text-xs opacity-50">Memuat track Anda…</span>
           </div>
-          <p class="text-xs opacity-60 mt-3">Mengganti jalur akan reset tampilan modul; progress lama tetap tersimpan.</p>
+          <div class="mt-3">
+            <a href="/enroll/" class="link link-primary text-xs">
+              <span class="material-symbols-outlined align-middle text-sm">add</span>
+              Enroll track baru
+            </a>
+          </div>
+          <p class="text-xs opacity-60 mt-3">Hanya track yang sudah Anda enroll muncul di sini. Mengganti jalur akan reset tampilan modul; progress lama tetap tersimpan.</p>
           <div id="trackMsg" class="hidden alert alert-success text-xs mt-2"></div>
           <div id="trackErr" class="hidden alert alert-error text-xs mt-2"></div>
         </div>
@@ -64,11 +67,60 @@
       try { return new Date(s).toLocaleString("id-ID"); } catch { return s; }
     }
 
+    const TRACK_LABELS = {
+      "slr": "SLR AI",
+      "slr-cowork": "SLR + AI Cowork",
+      "scoping": "Scoping Review",
+      "buku": "Penulisan Buku Akademik",
+    };
+
+    function trackLabel(slug) {
+      return TRACK_LABELS[slug] || slug;
+    }
+
     function refreshTrackUI(track) {
-      document.getElementById("currentTrack").textContent = track || "(belum dipilih)";
-      document.querySelectorAll("[data-track]").forEach((b) => {
+      document.getElementById("currentTrack").textContent = trackLabel(track) || "(belum dipilih)";
+      document.querySelectorAll("#trackButtons [data-track]").forEach((b) => {
         b.classList.toggle("btn-primary", b.dataset.track === track);
       });
+    }
+
+    function buildTrackButtons(enrollments, currentTrack) {
+      const container = document.getElementById("trackButtons");
+      container.innerHTML = "";
+
+      if (!enrollments || enrollments.length === 0) {
+        container.innerHTML = '<span class="text-xs opacity-50">Belum ada track ter-enroll.</span>';
+        return;
+      }
+
+      enrollments.forEach((e) => {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-sm";
+        btn.dataset.track = e.track;
+        btn.textContent = trackLabel(e.track);
+        if (e.track === currentTrack) btn.classList.add("btn-primary");
+        btn.addEventListener("click", () => switchTrack(e.track));
+        container.appendChild(btn);
+      });
+    }
+
+    async function switchTrack(track) {
+      const okBox = document.getElementById("trackMsg");
+      const errBox = document.getElementById("trackErr");
+      okBox.classList.add("hidden"); errBox.classList.add("hidden");
+      try {
+        await Api.post("/api/track", { track });
+        const u = Auth.getUser() || {};
+        u.selected_track = track;
+        Auth.setUser(u);
+        refreshTrackUI(track);
+        okBox.textContent = "Jalur diubah ke: " + trackLabel(track);
+        okBox.classList.remove("hidden");
+      } catch (err) {
+        errBox.textContent = err.message || "Gagal mengubah jalur";
+        errBox.classList.remove("hidden");
+      }
     }
 
     async function load() {
@@ -80,8 +132,19 @@
         document.getElementById("userAff").textContent = u.affiliation || "—";
         document.getElementById("userRole").textContent = u.role;
         document.getElementById("userJoined").textContent = fmtDate(u.created_at);
-        refreshTrackUI(u.selected_track || "");
         Auth.setUser(u);
+
+        // Fetch enrollments untuk build switcher dinamis
+        try {
+          const enrollData = await Api.get("/api/enrollments");
+          buildTrackButtons(enrollData.enrollments || [], u.selected_track || "");
+        } catch (e) {
+          // Fallback: tampilkan current track only kalau API fail
+          const fallback = u.selected_track ? [{ track: u.selected_track }] : [];
+          buildTrackButtons(fallback, u.selected_track || "");
+        }
+
+        refreshTrackUI(u.selected_track || "");
         document.getElementById("loading").classList.add("hidden");
         document.getElementById("content").classList.remove("hidden");
       } catch (err) {
@@ -91,27 +154,6 @@
         errBox.classList.remove("hidden");
       }
     }
-
-    document.querySelectorAll("[data-track]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const track = btn.dataset.track;
-        const okBox = document.getElementById("trackMsg");
-        const errBox = document.getElementById("trackErr");
-        okBox.classList.add("hidden"); errBox.classList.add("hidden");
-        try {
-          await Api.post("/api/track", { track });
-          const u = Auth.getUser() || {};
-          u.selected_track = track;
-          Auth.setUser(u);
-          refreshTrackUI(track);
-          okBox.textContent = "Jalur diubah ke: " + track;
-          okBox.classList.remove("hidden");
-        } catch (err) {
-          errBox.textContent = err.message || "Gagal mengubah jalur";
-          errBox.classList.remove("hidden");
-        }
-      });
-    });
 
     load();
   </script>
