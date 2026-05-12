@@ -289,7 +289,8 @@ const TRACK_META = {
   "slr": { title: "SLR AI", icon: "chat" },
   "slr-cowork": { title: "SLR + AI Cowork", icon: "auto_awesome" },
   "scoping": { title: "Scoping Review", icon: "explore" },
-  "buku": { title: "Penulisan Buku Akademik", icon: "menu_book" }
+  "buku": { title: "Penulisan Buku Akademik", icon: "menu_book" },
+  "empiris": { title: "Riset Empiris dengan AI", icon: "biotech" }
 };
 
 const urlParams = new URLSearchParams(location.search);
@@ -527,6 +528,13 @@ async function loadHomeAndContent() {
   // Article content + reading time
   const article = document.getElementById("modul-content");
   article.innerHTML = modulData.html_content || "";
+
+  // Empiris sub-track selector panel (M2 = pilih tentative, M3 = confirm/switch).
+  // Render hanya jika track=empiris dan slug=02-research-context / 03-data-preparation.
+  if (track === "empiris" && (slug === "02-research-context" || slug === "03-data-preparation")) {
+    renderEmpirisSubtrackPanel(article, slug, modulData.empiris_subtrack || "");
+  }
+
   const wc = (article.textContent.trim().match(/\S+/g) || []).length;
   document.getElementById("word-count").textContent = wc.toLocaleString("id-ID") + " kata";
   document.getElementById("reading-time").textContent = Math.max(1, Math.round(wc / 200)) + " menit baca";
@@ -555,6 +563,77 @@ async function loadHomeAndContent() {
   } else {
     document.getElementById("next-empty").classList.remove("hidden");
   }
+}
+
+// Panel untuk pilih / ubah sub-track empiris.
+// M2: tentative pick. M3: verify + optional switch.
+function renderEmpirisSubtrackPanel(article, slug, currentSubtrack) {
+  const isM2 = slug === "02-research-context";
+  const labels = { qual: "Kualitatif", quan: "Kuantitatif", mix: "Mixed Methods" };
+  const icons = { qual: "groups", quan: "monitoring", mix: "alt_route" };
+
+  const panel = document.createElement("div");
+  panel.className = "not-prose card bg-base-100 border-2 border-primary/40 shadow-md my-6";
+  panel.id = "empiris-subtrack-panel";
+
+  const heading = isM2 ? "Pilih TENTATIVE Sub-Track Anda" : "Verifikasi Sub-Track + (Opsional) Switch";
+  const hint = isM2
+    ? "Berdasarkan pertanyaan penelitian (RQ) Anda, pilih metodologi yang paling sesuai. Anda masih bisa SWITCH di Modul 3 setelah verifikasi data aktual."
+    : "Pastikan sub-track tentative Anda match dengan karakteristik data aktual. Jika mismatch, SWITCH dengan jujur — lebih baik switch sekarang daripada force-fit.";
+
+  const currentBadge = currentSubtrack
+    ? `<span class="badge badge-primary gap-1"><span class="material-symbols-outlined text-sm">${icons[currentSubtrack] || "check"}</span>Saat ini: ${labels[currentSubtrack] || currentSubtrack}</span>`
+    : `<span class="badge badge-warning gap-1"><span class="material-symbols-outlined text-sm">priority_high</span>Belum dipilih</span>`;
+
+  panel.innerHTML = `
+    <div class="card-body">
+      <div class="flex items-start justify-between gap-3 flex-wrap mb-2">
+        <h3 class="card-title text-lg">
+          <span class="material-symbols-outlined text-primary">alt_route</span>
+          ${heading}
+        </h3>
+        ${currentBadge}
+      </div>
+      <p class="text-sm text-base-content/70 mb-3">${hint}</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+        ${["qual","quan","mix"].map(st => `
+          <button type="button" data-subtrack="${st}"
+            class="btn btn-outline justify-start h-auto py-3 ${currentSubtrack === st ? 'btn-primary' : ''}">
+            <span class="material-symbols-outlined">${icons[st]}</span>
+            <span class="flex flex-col items-start">
+              <span class="font-semibold">${labels[st]}</span>
+              <span class="text-xs opacity-70">${st}</span>
+            </span>
+          </button>
+        `).join("")}
+      </div>
+      <div id="empiris-subtrack-msg" class="text-sm mt-3 hidden"></div>
+    </div>
+  `;
+
+  article.appendChild(panel);
+
+  panel.querySelectorAll("[data-subtrack]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const newSt = btn.dataset.subtrack;
+      const msgBox = document.getElementById("empiris-subtrack-msg");
+      msgBox.classList.remove("hidden", "text-success", "text-error");
+      msgBox.classList.add("text-base-content/70");
+      msgBox.textContent = "Menyimpan...";
+      try {
+        await Api.patch("/me/empiris-subtrack", { subtrack: newSt });
+        msgBox.classList.remove("text-base-content/70");
+        msgBox.classList.add("text-success");
+        msgBox.textContent = "✓ Sub-track tersimpan: " + (labels[newSt] || newSt) + ". Refresh sidebar...";
+        // Reload halaman untuk refresh sidebar dengan sub-track baru.
+        setTimeout(() => location.reload(), 800);
+      } catch (err) {
+        msgBox.classList.remove("text-base-content/70");
+        msgBox.classList.add("text-error");
+        msgBox.textContent = "Gagal menyimpan: " + (err.message || "unknown error");
+      }
+    });
+  });
 }
 
 // Toast notifier untuk action feedback (copy, complete, dll).
