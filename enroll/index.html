@@ -120,7 +120,7 @@ const submitBtn = document.getElementById("submitBtn");
 const preselectedTrack = new URLSearchParams(location.search).get("track") || "";
 
 function trackLabel(slug) {
-  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review", "buku": "Penulisan Buku Akademik", "empiris": "Riset Empiris dengan AI" };
+  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review", "scoping-cowork": "Scoping Review + AI Cowork", "buku": "Penulisan Buku Akademik", "empiris": "Riset Empiris dengan AI" };
   return map[slug] || slug;
 }
 
