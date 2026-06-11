@@ -73,6 +73,7 @@
     <option value="scoping-cowork">Scoping Review + AI Cowork</option>
     <option value="buku">Penulisan Buku Akademik</option>
     <option value="empiris">Riset Empiris dengan AI</option>
+    <option value="modul-quan">Riset Kuantitatif</option>
   </select>
 
   <div id="errorState" class="hidden alert alert-error my-4 text-sm"></div>
@@ -146,7 +147,7 @@ function fmtDateTime(s) {
 }
 
 function trackLabel(slug) {
-  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review", "scoping-cowork": "Scoping Review + AI Cowork", "buku": "Penulisan Buku Akademik", "empiris": "Riset Empiris dengan AI" };
+  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review", "scoping-cowork": "Scoping Review + AI Cowork", "buku": "Penulisan Buku Akademik", "empiris": "Riset Empiris dengan AI", "modul-quan": "Riset Kuantitatif" };
   return map[slug] || slug;
 }
 
