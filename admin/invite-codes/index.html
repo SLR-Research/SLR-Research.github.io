@@ -3,51 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- theme-init: honor saved theme before paint (no FOUC) -->
+  <script>try{var t=localStorage.getItem('slr_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <title>Admin · Invite Codes — Nulis</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23B19CD8%27 stroke-width=%272%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253%27/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
 
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com/3.4.13?plugins=typography"></script>
+  <link rel="stylesheet" href="/assets/css/app.css">
   <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body class="bg-base-100">
 
-<div class="navbar bg-base-100 border-b border-base-200 sticky top-0 z-40">
-  <div class="flex-1">
-    <a href="/admin/dashboard/" class="flex items-center gap-2 px-4">
-      <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
-      <span class="font-bold text-lg">Admin Panel</span>
-    </a>
-  </div>
-  <div class="flex-none">
-    <ul class="menu menu-horizontal px-1 gap-1">
-      <li><a href="/admin/dashboard/"><span class="material-symbols-outlined text-sm">dashboard</span> Dashboard</a></li>
-      <li><a href="/admin/users/"><span class="material-symbols-outlined text-sm">group</span> Users</a></li>
-      <li><a href="/admin/enrollments/"><span class="material-symbols-outlined text-sm">how_to_reg</span> Enrollments</a></li>
-      <li><a href="/admin/invite-codes/" class="active"><span class="material-symbols-outlined text-sm">vpn_key</span> Invite Codes</a></li>
-      <li><a href="/admin/progress/"><span class="material-symbols-outlined text-sm">trending_up</span> Progress</a></li>
-    </ul>
-    <div class="divider divider-horizontal mx-0"></div>
-    <div class="flex items-center gap-2 px-2">
-      <div class="avatar placeholder">
-        <div class="bg-neutral text-neutral-content rounded-full w-8">
-          <span class="text-xs font-bold" id="userInitials">—</span>
-        </div>
-      </div>
-      <span class="text-sm font-medium hidden sm:inline" id="userName">—</span>
-    </div>
-    <a href="/modul/?slug=home" class="btn btn-ghost btn-sm" title="Kembali ke App">
-      <span class="material-symbols-outlined text-sm">arrow_back</span>
-    </a>
-    <button id="logoutBtn" class="btn btn-ghost btn-sm" title="Logout">
-      <span class="material-symbols-outlined text-sm">logout</span>
-    </button>
-  </div>
-</div>
+<div id="admin-nav"></div>
+
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -84,7 +55,14 @@
 
   <div class="card bg-base-100 border border-base-200">
     <div class="card-body p-0">
-      <div id="loading" class="text-center py-12 opacity-60">Memuat...</div>
+      <div id="loading" class="p-4 space-y-3">
+        <div class="skeleton h-9 w-full"></div>
+        <div class="skeleton h-9 w-full"></div>
+        <div class="skeleton h-9 w-full"></div>
+        <div class="skeleton h-9 w-full"></div>
+        <div class="skeleton h-9 w-full"></div>
+        <div class="skeleton h-9 w-full"></div>
+      </div>
       <div id="emptyState" class="hidden text-center py-12">
         <span class="material-symbols-outlined text-5xl text-base-content/20 mb-4">key_off</span>
         <p class="text-base-content/50">Belum ada invite code.</p>
@@ -191,12 +169,11 @@
 
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
+<script src="/assets/js/ui.js"></script>
+<script src="/assets/js/admin-nav.js"></script>
 <script>
 Auth.requireProfile();
 const u = Auth.getUser() || {};
-document.getElementById("userName").textContent = u.name || "—";
-document.getElementById("userInitials").textContent = (u.name || "?").slice(0,2).toUpperCase();
-document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
 
 function fmtDate(s) {
   if (!s) return "—";
@@ -212,18 +189,8 @@ function trackLabel(slug) {
   return map[slug] || slug;
 }
 
-function showSuccess(msg) {
-  const t = document.getElementById("successToast");
-  t.textContent = msg;
-  t.classList.remove("hidden");
-  setTimeout(() => t.classList.add("hidden"), 4000);
-}
-function showError(msg) {
-  const e = document.getElementById("errorState");
-  e.textContent = msg;
-  e.classList.remove("hidden");
-  setTimeout(() => e.classList.add("hidden"), 5000);
-}
+function showSuccess(msg) { UI.toast(msg, "success"); }
+function showError(msg) { UI.toast(msg, "error"); }
 
 async function loadCodes() {
   const loading = document.getElementById("loading");
@@ -290,7 +257,9 @@ async function loadCodes() {
       toggleIcon.textContent = c.is_active ? "toggle_on" : "toggle_off";
       toggleBtn.title = c.is_active ? "Nonaktifkan" : "Aktifkan";
       toggleBtn.addEventListener("click", async () => {
-        if (!confirm((c.is_active ? "Nonaktifkan" : "Aktifkan") + " kode " + c.code + "?")) return;
+        if (!await UI.confirm({ title: (c.is_active ? "Nonaktifkan" : "Aktifkan") + " Kode",
+            message: "Kode " + c.code + " akan " + (c.is_active ? "dinonaktifkan" : "diaktifkan") + ".",
+            confirmText: c.is_active ? "Nonaktifkan" : "Aktifkan", danger: c.is_active })) return;
         try {
           await Api.post(`/admin/invite-codes/${c.id}/toggle`);
           showSuccess("Status kode diubah");

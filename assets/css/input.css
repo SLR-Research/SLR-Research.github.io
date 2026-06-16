@@ -1,0 +1,11 @@
+/* ═══════════════════════════════════════════════════════════════
+   Tailwind build entry — compiled to assets/css/app.css by the
+   Tailwind CLI (see package.json "build:css"). Replaces the
+   cdn.tailwindcss.com Play CDN, which is not meant for production.
+
+   Bespoke theme tokens, prose styling, and overrides live in
+   custom.css, which is linked AFTER app.css on every page.
+   ═══════════════════════════════════════════════════════════════ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
