@@ -25,14 +25,19 @@ ditujukan untuk produksi). Token tema & prose bespoke tetap di `custom.css`.
 
 ```bash
 npm install            # sekali, ambil toolchain
-npm run build:css      # build assets/css/app.css (ter-minify)
-npm run watch:css      # rebuild otomatis saat ngoding lokal
+npm run build          # build CSS + copy vendor bundles (Chart.js)
+npm run watch:css      # rebuild CSS otomatis saat ngoding lokal
 ```
 
-`assets/css/app.css` **tidak di-commit** (di-`.gitignore`) — GitHub Actions
-mem-build ulang setiap deploy (lihat `.github/workflows/pages.yml`). Kelas
-Tailwind yang dirakit dinamis di JS (mis. `btn-${accent}`) di-*safelist* di
-`tailwind.config.js`; tambah ke sana bila menambah pola kelas dinamis baru.
+Output build **tidak di-commit** (di-`.gitignore`) — GitHub Actions mem-build
+ulang setiap deploy (lihat `.github/workflows/pages.yml`):
+
+- `assets/css/app.css` — Tailwind + DaisyUI ter-kompilasi. Kelas Tailwind yang
+  dirakit dinamis di JS (mis. `btn-${accent}`) di-*safelist* di
+  `tailwind.config.js`; tambah ke sana bila ada pola kelas dinamis baru.
+- `assets/js/vendor/chart.umd.min.js` — Chart.js (di-*vendor* dari `node_modules`
+  oleh `scripts/vendor.mjs`, bukan CDN). Dipakai hanya di dashboard admin. Untuk
+  update: `npm i -D chart.js@<versi> && npm run build:vendor`.
 
 ## Lisensi
 

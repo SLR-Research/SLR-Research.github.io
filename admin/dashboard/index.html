@@ -178,6 +178,29 @@
       </a>
     </div>
 
+    <!-- Visual Summary (charts) -->
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-3">Ringkasan Visual</h2>
+    <div class="card bg-base-100 border border-base-200 mb-4">
+      <div class="card-body">
+        <h3 class="font-semibold text-sm mb-1">Status Enrollment</h3>
+        <div class="h-48"><canvas id="chart-funnel"></canvas></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      <div class="card bg-base-100 border border-base-200">
+        <div class="card-body">
+          <h3 class="font-semibold text-sm mb-1">Komposisi User</h3>
+          <div class="h-52"><canvas id="chart-users"></canvas></div>
+        </div>
+      </div>
+      <div class="card bg-base-100 border border-base-200">
+        <div class="card-body">
+          <h3 class="font-semibold text-sm mb-1">Kode Undangan</h3>
+          <div class="h-52"><canvas id="chart-codes"></canvas></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Recent Registrations -->
     <div class="card bg-base-100 border border-base-200">
       <div class="card-body">
@@ -230,6 +253,8 @@
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ui.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
+<script src="/assets/js/vendor/chart.umd.min.js"></script>
+<script src="/assets/js/admin-charts.js"></script>
 <script>
 Auth.requireProfile();
 const u = Auth.getUser() || {};
@@ -258,6 +283,9 @@ function fmtDate(s) {
     document.getElementById("stat-approved").textContent = d.approved_enrollments ?? 0;
     document.getElementById("stat-invite-active").textContent = d.active_invite_codes ?? 0;
     document.getElementById("stat-invite-total").textContent = d.total_invite_codes ?? 0;
+
+    // Visual summary charts (built from the same payload).
+    if (window.renderDashboardCharts) renderDashboardCharts(d);
 
     const recent = d.recent_users || [];
     if (recent.length === 0) {
