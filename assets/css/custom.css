@@ -1132,3 +1132,22 @@ html {
     line-height: 1.6;
   }
 }
+
+/* ── Reduced Motion (a11y) ─────────────────────────────────────
+   Honor prefers-reduced-motion: collapse animations/transitions to
+   near-instant, stop looping effects (skeleton pulse, progress ring),
+   and disable smooth scroll. Standard WCAG 2.3.3 safeguard. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}

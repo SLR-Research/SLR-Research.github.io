@@ -55,7 +55,7 @@
 
   <div class="card bg-base-100 border border-base-200">
     <div class="card-body p-0">
-      <div id="loading" class="p-4 space-y-3">
+      <div id="loading" class="p-4 space-y-3" role="status" aria-busy="true" aria-label="Memuat">
         <div class="skeleton h-9 w-full"></div>
         <div class="skeleton h-9 w-full"></div>
         <div class="skeleton h-9 w-full"></div>
@@ -72,15 +72,15 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Code</th>
-              <th>Track</th>
-              <th>Status</th>
-              <th>Pemakaian</th>
-              <th>Trial Days</th>
-              <th>Expires</th>
-              <th>Notes</th>
-              <th>Dibuat</th>
-              <th>Aksi</th>
+              <th scope="col">Code</th>
+              <th scope="col">Track</th>
+              <th scope="col">Status</th>
+              <th scope="col">Pemakaian</th>
+              <th scope="col">Trial Days</th>
+              <th scope="col">Expires</th>
+              <th scope="col">Notes</th>
+              <th scope="col">Dibuat</th>
+              <th scope="col">Aksi</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -256,6 +256,7 @@ async function loadCodes() {
       const toggleIcon = toggleBtn.querySelector(".material-symbols-outlined");
       toggleIcon.textContent = c.is_active ? "toggle_on" : "toggle_off";
       toggleBtn.title = c.is_active ? "Nonaktifkan" : "Aktifkan";
+      toggleBtn.setAttribute("aria-label", (c.is_active ? "Nonaktifkan" : "Aktifkan") + " kode " + c.code);
       toggleBtn.addEventListener("click", async () => {
         if (!await UI.confirm({ title: (c.is_active ? "Nonaktifkan" : "Aktifkan") + " Kode",
             message: "Kode " + c.code + " akan " + (c.is_active ? "dinonaktifkan" : "diaktifkan") + ".",

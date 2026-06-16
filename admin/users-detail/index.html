@@ -30,7 +30,10 @@
     </ul>
   </nav>
 
-  <div id="loading" class="opacity-60">Memuat...</div>
+  <div id="loading" class="space-y-4" role="status" aria-busy="true" aria-label="Memuat">
+    <div class="skeleton h-32 w-full"></div>
+    <div class="skeleton h-48 w-full"></div>
+  </div>
   <div id="errorState" class="hidden alert alert-error"><span class="material-symbols-outlined">error</span><span id="errMsg"></span></div>
 
   <div id="content" class="hidden">
@@ -89,7 +92,7 @@
         <div id="progressTableWrap" class="hidden overflow-x-auto">
           <table class="table table-sm">
             <thead>
-              <tr><th>Modul</th><th>Track</th><th>Status</th><th>Terakhir Dikunjungi</th><th>Diselesaikan</th></tr>
+              <tr><th scope="col">Modul</th><th scope="col">Track</th><th scope="col">Status</th><th scope="col">Terakhir Dikunjungi</th><th scope="col">Diselesaikan</th></tr>
             </thead>
             <tbody id="progressRows"></tbody>
           </table>

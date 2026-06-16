@@ -52,7 +52,7 @@
 
   <div class="card bg-base-100 border border-base-200 mt-4">
     <div class="card-body p-0">
-      <div id="loading" class="p-4 space-y-3">
+      <div id="loading" class="p-4 space-y-3" role="status" aria-busy="true" aria-label="Memuat">
         <div class="skeleton h-9 w-full"></div>
         <div class="skeleton h-9 w-full"></div>
         <div class="skeleton h-9 w-full"></div>
@@ -68,13 +68,13 @@
         <table class="table">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Track</th>
-              <th>Status</th>
-              <th>Trial Sampai</th>
-              <th>Kode Dipakai</th>
-              <th>Daftar</th>
-              <th>Aksi</th>
+              <th scope="col">User</th>
+              <th scope="col">Track</th>
+              <th scope="col">Status</th>
+              <th scope="col">Trial Sampai</th>
+              <th scope="col">Kode Dipakai</th>
+              <th scope="col">Daftar</th>
+              <th scope="col">Aksi</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>

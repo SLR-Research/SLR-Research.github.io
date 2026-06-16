@@ -24,7 +24,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
 
-  <div id="loading">
+  <div id="loading" role="status" aria-busy="true" aria-label="Memuat">
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
       <div class="skeleton h-20 w-full"></div>
       <div class="skeleton h-20 w-full"></div>
@@ -217,7 +217,7 @@
         <div id="recentTableWrap" class="hidden overflow-x-auto">
           <table class="table table-sm">
             <thead>
-              <tr><th>Nama</th><th>Email</th><th>Afiliasi</th><th>Role</th><th>Status</th><th>Terdaftar</th></tr>
+              <tr><th scope="col">Nama</th><th scope="col">Email</th><th scope="col">Afiliasi</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Terdaftar</th></tr>
             </thead>
             <tbody id="recentRows"></tbody>
           </table>
