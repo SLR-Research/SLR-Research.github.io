@@ -61,10 +61,13 @@ module.exports = {
     "./terms/*.html",
     "./home/*.html",
     "./admin/**/*.html",
-    // Shared JS (auth/api/config). app.js is dead code (unreferenced) → excluded.
+    // Shared JS that builds markup with class literals. app.js is dead code
+    // (unreferenced) → excluded.
     "./assets/js/auth.js",
     "./assets/js/api.js",
     "./assets/js/config.js",
+    "./assets/js/ui.js",
+    "./assets/js/admin-nav.js",
   ],
   safelist: [...dynamicSafelist, ...jsOnlySafelist],
   theme: {

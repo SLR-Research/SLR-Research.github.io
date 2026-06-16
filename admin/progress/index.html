@@ -17,30 +17,8 @@
 </head>
 <body class="bg-base-100">
 
-<div class="navbar bg-base-100 border-b border-base-200 sticky top-0 z-40">
-  <div class="flex-1">
-    <a href="/admin/dashboard/" class="flex items-center gap-2 px-4">
-      <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
-      <span class="font-bold text-lg">Admin Panel</span>
-    </a>
-  </div>
-  <div class="flex-none">
-    <ul class="menu menu-horizontal px-1 gap-1">
-      <li><a href="/admin/dashboard/"><span class="material-symbols-outlined text-sm">dashboard</span> Dashboard</a></li>
-      <li><a href="/admin/users/"><span class="material-symbols-outlined text-sm">group</span> Users</a></li>
-      <li><a href="/admin/enrollments/"><span class="material-symbols-outlined text-sm">how_to_reg</span> Enrollments</a></li>
-      <li><a href="/admin/invite-codes/"><span class="material-symbols-outlined text-sm">vpn_key</span> Invite Codes</a></li>
-      <li><a href="/admin/progress/" class="active"><span class="material-symbols-outlined text-sm">trending_up</span> Progress</a></li>
-    </ul>
-    <div class="divider divider-horizontal mx-0"></div>
-    <a href="/modul/?slug=home" class="btn btn-ghost btn-sm" title="Kembali ke App">
-      <span class="material-symbols-outlined text-sm">arrow_back</span>
-    </a>
-    <button id="logoutBtn" class="btn btn-ghost btn-sm" title="Logout">
-      <span class="material-symbols-outlined text-sm">logout</span>
-    </button>
-  </div>
-</div>
+<div id="admin-nav"></div>
+
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <h1 class="text-2xl font-bold mb-6">Progress Overview</h1>
@@ -92,9 +70,10 @@
 
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
+<script src="/assets/js/ui.js"></script>
+<script src="/assets/js/admin-nav.js"></script>
 <script>
 Auth.requireProfile();
-document.getElementById("logoutBtn").addEventListener("click", () => Auth.logout());
 
 function fmtDate(s) {
   if (!s) return "—";
