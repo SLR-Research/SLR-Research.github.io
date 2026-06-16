@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- theme-init: honor saved theme before paint (no FOUC) -->
   <script>try{var t=localStorage.getItem('slr_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <title>Enroll Track — Nulis</title>
@@ -148,6 +149,8 @@ function showSuccess(msg) {
   successAlert.classList.remove("hidden");
 }
 
+const ACCENTS = ["primary","secondary","accent","info","success","warning","error","neutral"];
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 async function loadTracksAndEnrollments() {
   try {
     const [tracksRes, enrollRes] = await Promise.all([
@@ -164,7 +167,7 @@ async function loadTracksAndEnrollments() {
     tracks.forEach((t) => {
       const id = "track-" + t.slug;
       const isEnrolled = enrolledTracks.has(t.slug);
-      const accent = t.accent || "primary";
+      const accent = ACCENTS.includes(t.accent) ? t.accent : "primary";
       const label = document.createElement("label");
       label.htmlFor = id;
       label.className = "flex items-start gap-3 p-3 border-2 rounded-lg transition " +
@@ -173,7 +176,7 @@ async function loadTracksAndEnrollments() {
           : "border-base-200 cursor-pointer hover:border-" + accent + "/50 has-[:checked]:border-" + accent + " has-[:checked]:bg-" + accent + "/5");
       const shouldCheck = !isEnrolled && (t.slug === preselectedTrack);
       label.innerHTML = `
-        <input type="radio" name="track" id="${id}" value="${t.slug}" class="radio radio-${accent} mt-1" ${isEnrolled ? "disabled" : ""} ${shouldCheck ? "checked" : ""}>
+        <input type="radio" name="track" id="${esc(id)}" value="${esc(t.slug)}" class="radio radio-${accent} mt-1" ${isEnrolled ? "disabled" : ""} ${shouldCheck ? "checked" : ""}>
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="material-symbols-outlined text-${accent}"></span>

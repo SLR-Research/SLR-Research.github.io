@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- theme-init: honor saved theme before paint (no FOUC) -->
   <script>try{var t=localStorage.getItem('slr_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <title>Menunggu Verifikasi — Nulis</title>
@@ -204,7 +205,11 @@ async function loadEnrollments() {
       }, 1500);
     }
   } catch (err) {
-    container.innerHTML = '<div class="alert alert-error text-sm">Gagal memuat enrollment: ' + (err.message || "") + '</div>';
+    container.replaceChildren();
+    const errDiv = document.createElement("div");
+    errDiv.className = "alert alert-error text-sm";
+    errDiv.textContent = "Gagal memuat enrollment: " + (err.message || "");
+    container.appendChild(errDiv);
   }
 }
 

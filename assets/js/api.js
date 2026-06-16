@@ -47,7 +47,7 @@
       // 409 atau 403 dengan field `redirect` = backend minta navigasi
       // (e.g. select-track belum dipilih, atau belum ter-enroll). Auto-follow
       // biar UX smooth. Caller bisa skip via { noFollow: true } di options.
-      if ((res.status === 409 || res.status === 403) && data && data.redirect) {
+      if ((res.status === 409 || res.status === 403) && data && data.redirect && /^\/(?!\/)/.test(data.redirect)) {
         window.location.href = data.redirect;
         return;
       }
