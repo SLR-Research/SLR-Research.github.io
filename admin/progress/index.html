@@ -23,7 +23,14 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <h1 class="text-2xl font-bold mb-6">Progress Overview</h1>
 
-  <div id="loading" class="opacity-60">Memuat...</div>
+  <div id="loading" class="space-y-3" role="status" aria-busy="true" aria-label="Memuat">
+    <div class="skeleton h-9 w-full"></div>
+    <div class="skeleton h-9 w-full"></div>
+    <div class="skeleton h-9 w-full"></div>
+    <div class="skeleton h-9 w-full"></div>
+    <div class="skeleton h-9 w-full"></div>
+    <div class="skeleton h-9 w-full"></div>
+  </div>
   <div id="errorState" class="hidden alert alert-error text-sm"></div>
 
   <div id="content" class="hidden space-y-6">
@@ -39,7 +46,7 @@
         <div id="statsTableWrap" class="hidden overflow-x-auto">
           <table class="table">
             <thead>
-              <tr><th>Track</th><th>Modul</th><th>Total Kunjungan</th><th>Diselesaikan</th><th>Tingkat Penyelesaian</th></tr>
+              <tr><th scope="col">Track</th><th scope="col">Modul</th><th scope="col">Total Kunjungan</th><th scope="col">Diselesaikan</th><th scope="col">Tingkat Penyelesaian</th></tr>
             </thead>
             <tbody id="statsRows"></tbody>
           </table>
@@ -58,7 +65,7 @@
         <div id="actTableWrap" class="hidden overflow-x-auto">
           <table class="table table-sm">
             <thead>
-              <tr><th>User</th><th>Track</th><th>Modul</th><th>Status</th><th>Waktu</th></tr>
+              <tr><th scope="col">User</th><th scope="col">Track</th><th scope="col">Modul</th><th scope="col">Status</th><th scope="col">Waktu</th></tr>
             </thead>
             <tbody id="actRows"></tbody>
           </table>

@@ -39,7 +39,7 @@
 
   <div class="card bg-base-100 border border-base-200">
     <div class="card-body p-0">
-      <div id="loading" class="p-4 space-y-3">
+      <div id="loading" class="p-4 space-y-3" role="status" aria-busy="true" aria-label="Memuat">
         <div class="skeleton h-9 w-full"></div>
         <div class="skeleton h-9 w-full"></div>
         <div class="skeleton h-9 w-full"></div>
@@ -55,7 +55,7 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Nama</th><th>Email</th><th>Afiliasi</th><th>Role</th><th>Status</th><th>Progress</th><th>Terdaftar</th><th>Aksi</th>
+              <th scope="col">Nama</th><th scope="col">Email</th><th scope="col">Afiliasi</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Progress</th><th scope="col">Terdaftar</th><th scope="col">Aksi</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>

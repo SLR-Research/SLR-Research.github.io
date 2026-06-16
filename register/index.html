@@ -39,18 +39,18 @@
       <!-- Register Form -->
       <form id="registerForm" class="space-y-4" novalidate>
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Nama Lengkap</span></label>
-          <input type="text" name="name" placeholder="Dr. Budi Santoso" class="input input-bordered w-full" required autofocus autocomplete="name">
+          <label class="label" for="reg-name"><span class="label-text font-medium">Nama Lengkap</span></label>
+          <input id="reg-name" type="text" name="name" placeholder="Dr. Budi Santoso" class="input input-bordered w-full" required autofocus autocomplete="name">
         </div>
 
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Email</span></label>
-          <input type="email" name="email" placeholder="nama@email.com" class="input input-bordered w-full" required autocomplete="email">
+          <label class="label" for="reg-email"><span class="label-text font-medium">Email</span></label>
+          <input id="reg-email" type="email" name="email" placeholder="nama@email.com" class="input input-bordered w-full" required autocomplete="email">
         </div>
 
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Afiliasi / Institusi <span class="text-error">*</span></span></label>
-          <input type="text" name="affiliation" placeholder="Universitas Indonesia" class="input input-bordered w-full" required minlength="2" autocomplete="organization">
+          <label class="label" for="reg-aff"><span class="label-text font-medium">Afiliasi / Institusi <span class="text-error">*</span></span></label>
+          <input id="reg-aff" type="text" name="affiliation" placeholder="Universitas Indonesia" class="input input-bordered w-full" required minlength="2" autocomplete="organization">
         </div>
 
         <!-- Track Selection -->
@@ -60,7 +60,11 @@
           </label>
           <div id="trackOptions" class="grid grid-cols-1 gap-2">
             <!-- Track radio cards di-inject via JS dari /api/tracks -->
-            <div class="text-sm text-base-content/50 px-2 py-3">Memuat daftar track...</div>
+            <div class="space-y-2" role="status" aria-busy="true" aria-label="Memuat daftar track">
+              <div class="skeleton h-14 w-full"></div>
+              <div class="skeleton h-14 w-full"></div>
+              <div class="skeleton h-14 w-full"></div>
+            </div>
           </div>
           <label class="label"><span class="label-text-alt text-base-content/50">Pilih jenis review yang ingin dipelajari</span></label>
         </div>
@@ -70,7 +74,7 @@
           <label class="label">
             <span class="label-text font-medium">Kode Undangan <span class="text-base-content/50 text-xs">(opsional)</span></span>
           </label>
-          <input type="text" name="invite_code" placeholder="Misal: ABCD1234" class="input input-bordered w-full font-mono uppercase" autocomplete="off" maxlength="32" oninput="this.value=this.value.toUpperCase()">
+          <input aria-label="Kode Undangan (opsional)" type="text" name="invite_code" placeholder="Misal: ABCD1234" class="input input-bordered w-full font-mono uppercase" autocomplete="off" maxlength="32" oninput="this.value=this.value.toUpperCase()">
           <div class="mt-2 text-xs space-y-1 text-base-content/70">
             <div class="flex gap-2">
               <span class="material-symbols-outlined text-success" style="font-size:14px">check_circle</span>
@@ -84,13 +88,13 @@
         </div>
 
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Password</span></label>
-          <input type="password" name="password" placeholder="Min. 8 karakter" class="input input-bordered w-full" required minlength="8" maxlength="128" autocomplete="new-password">
+          <label class="label" for="reg-password"><span class="label-text font-medium">Password</span></label>
+          <input id="reg-password" type="password" name="password" placeholder="Min. 8 karakter" class="input input-bordered w-full" required minlength="8" maxlength="128" autocomplete="new-password">
         </div>
 
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Konfirmasi Password</span></label>
-          <input type="password" name="confirm_password" placeholder="Ulangi password" class="input input-bordered w-full" required autocomplete="new-password">
+          <label class="label" for="reg-confirm"><span class="label-text font-medium">Konfirmasi Password</span></label>
+          <input id="reg-confirm" type="password" name="confirm_password" placeholder="Ulangi password" class="input input-bordered w-full" required autocomplete="new-password">
         </div>
 
         <button type="submit" id="submitBtn" class="btn btn-primary w-full mt-2">Buat Akun</button>

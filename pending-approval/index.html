@@ -28,7 +28,7 @@
     </div>
     <div class="flex-none gap-2 px-4">
       <span class="text-sm hidden sm:inline opacity-70">Hai, <span id="userName">—</span></span>
-      <button id="logoutBtn" class="btn btn-ghost btn-sm">
+      <button id="logoutBtn" class="btn btn-ghost btn-sm" aria-label="Keluar">
         <span class="material-symbols-outlined text-sm">logout</span>
         <span class="hidden sm:inline ml-1">Logout</span>
       </button>
@@ -55,7 +55,10 @@
         <div class="w-full text-left">
           <h2 class="font-semibold text-sm uppercase tracking-wide opacity-70 mb-3">Track yang Anda Daftarkan</h2>
           <div id="enrollList" class="space-y-2">
-            <div class="text-sm opacity-50">Memuat...</div>
+            <div class="space-y-2" role="status" aria-busy="true" aria-label="Memuat">
+              <div class="skeleton h-12 w-full"></div>
+              <div class="skeleton h-12 w-full"></div>
+            </div>
           </div>
         </div>
 
