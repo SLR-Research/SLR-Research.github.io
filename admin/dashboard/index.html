@@ -24,7 +24,16 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
 
-  <div id="loading" class="opacity-60">Memuat...</div>
+  <div id="loading">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <div class="skeleton h-20 w-full"></div>
+      <div class="skeleton h-20 w-full"></div>
+      <div class="skeleton h-20 w-full"></div>
+      <div class="skeleton h-20 w-full"></div>
+      <div class="skeleton h-20 w-full"></div>
+    </div>
+    <div class="skeleton h-64 w-full"></div>
+  </div>
   <div id="errorState" class="hidden alert alert-error text-sm"></div>
 
   <div id="content" class="hidden">
@@ -178,7 +187,10 @@
             Lihat Semua <span class="material-symbols-outlined text-sm">arrow_forward</span>
           </a>
         </div>
-        <div id="recentEmpty" class="hidden text-base-content/50 text-center py-8">Belum ada user terdaftar.</div>
+        <div id="recentEmpty" class="hidden text-center py-8">
+          <span class="material-symbols-outlined text-5xl text-base-content/20 mb-3">person_off</span>
+          <p class="text-base-content/50">Belum ada user terdaftar.</p>
+        </div>
         <div id="recentTableWrap" class="hidden overflow-x-auto">
           <table class="table table-sm">
             <thead>
