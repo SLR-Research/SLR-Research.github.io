@@ -51,6 +51,8 @@ module.exports = {
     "./*.html",
     "./login/*.html",
     "./register/*.html",
+    "./forgot-password/*.html",
+    "./reset-password/*.html",
     "./profile/*.html",
     "./profile-complete/*.html",
     "./select-track/*.html",

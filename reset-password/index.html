@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- theme-init: honor saved theme before paint (no FOUC) -->
   <script>try{var t=localStorage.getItem('slr_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
-  <title>Masuk — Nulis</title>
+  <title>Reset Password — Nulis</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23B19CD8%27 stroke-width=%272%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253%27/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,16 +24,16 @@
       <!-- Brand -->
       <div class="text-center mb-6">
         <img src="/assets/images/logo-rpi.png" alt="RPI Institute" class="h-12 w-auto mx-auto mb-3">
-        <h1 class="text-xl font-bold">Masuk ke Nulis</h1>
-        <p class="text-base-content/60 text-sm mt-1">Workflow akademik bareng AI</p>
+        <h1 class="text-xl font-bold">Buat Password Baru</h1>
+        <p class="text-base-content/60 text-sm mt-1">Masukkan password baru untuk akunmu.</p>
       </div>
 
-      <!-- Success after register (?registered=1) -->
+      <!-- Success message -->
       <div id="successAlert" class="hidden alert alert-success mb-4" role="alert">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
         </svg>
-        <span>Akun berhasil dibuat! Silakan login.</span>
+        <span id="successMsg"></span>
       </div>
 
       <!-- Error message -->
@@ -44,50 +44,34 @@
         <span id="errorMsg"></span>
       </div>
 
-      <!-- Login Form -->
-      <form id="loginForm" class="space-y-4" novalidate>
+      <form id="resetForm" class="space-y-4" novalidate>
         <div class="form-control">
-          <label class="label" for="login-email"><span class="label-text font-medium">Email</span></label>
-          <input id="login-email" type="email" name="email" placeholder="nama@email.com" class="input input-bordered w-full" required autofocus autocomplete="email">
+          <label class="label" for="reset-password"><span class="label-text font-medium">Password Baru</span></label>
+          <input id="reset-password" type="password" name="password" placeholder="Min. 8 karakter" class="input input-bordered w-full" required minlength="8" maxlength="128" autocomplete="new-password" autofocus>
         </div>
 
         <div class="form-control">
-          <label class="label" for="login-password"><span class="label-text font-medium">Password</span></label>
-          <input id="login-password" type="password" name="password" placeholder="••••••••" class="input input-bordered w-full" required autocomplete="current-password">
-          <label class="label justify-end pb-0">
-            <a href="/forgot-password/" class="label-text-alt link link-hover text-primary">Lupa password?</a>
-          </label>
+          <label class="label" for="reset-confirm"><span class="label-text font-medium">Konfirmasi Password</span></label>
+          <input id="reset-confirm" type="password" name="confirm_password" placeholder="Ulangi password" class="input input-bordered w-full" required autocomplete="new-password">
         </div>
 
-        <button type="submit" id="submitBtn" class="btn btn-primary w-full mt-2">Masuk</button>
+        <button type="submit" id="submitBtn" class="btn btn-primary w-full mt-2">Simpan Password Baru</button>
       </form>
 
       <div class="divider text-xs">atau</div>
 
-      <!-- Google Sign-In button (script di bottom) -->
-      <div id="googleSignIn" class="flex justify-center"></div>
-
-      <div class="divider text-xs">Belum punya akun?</div>
-
-      <a href="/register/" class="btn btn-outline w-full">Daftar Sekarang</a>
+      <a href="/login/" class="btn btn-outline w-full">Kembali ke Login</a>
     </div>
   </div>
 </div>
-
-<!-- Google Identity Services library -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <script src="/assets/js/config.js"></script>
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script>
-Auth.requireGuest();
-
-if (new URLSearchParams(location.search).get("registered")) {
-  document.getElementById("successAlert").classList.remove("hidden");
-}
-
-const form = document.getElementById("loginForm");
+const form = document.getElementById("resetForm");
+const okAlert = document.getElementById("successAlert");
+const okMsg = document.getElementById("successMsg");
 const errAlert = document.getElementById("errorAlert");
 const errMsg = document.getElementById("errorMsg");
 const submitBtn = document.getElementById("submitBtn");
@@ -97,57 +81,39 @@ function showError(msg) {
   errAlert.classList.remove("hidden");
 }
 
-// Google SSO init — render button after GIS library loaded.
-function initGoogleSSO() {
-  const clientId = window.GOOGLE_CLIENT_ID;
-  if (!clientId || !window.google || !google.accounts) return;
-  google.accounts.id.initialize({
-    client_id: clientId,
-    callback: async (response) => {
-      errAlert.classList.add("hidden");
-      try {
-        const data = await Api.post("/auth/google", { id_token: response.credential });
-        if (data && data.token) {
-          Auth.setToken(data.token);
-          if (data.user) Auth.setUser(data.user);
-          location.href = Auth.nextDest();
-        } else { showError("Response Google login tidak valid"); }
-      } catch (err) { showError(err.message || "Google login gagal"); }
-    },
-  });
-  google.accounts.id.renderButton(document.getElementById("googleSignIn"), {
-    theme: "outline", size: "large", shape: "rectangular", width: 320, text: "signin_with",
-  });
+// Token dari link email: /reset-password/?token=<64-hex>
+const token = new URLSearchParams(location.search).get("token") || "";
+if (!/^[0-9a-f]{64}$/.test(token)) {
+  form.classList.add("hidden");
+  showError("Link reset tidak valid — buka link dari email terbaru, atau minta link baru lewat halaman Lupa Password.");
 }
-// Poll until GIS library loaded (async script).
-const _gisInterval = setInterval(() => {
-  if (window.google && google.accounts) { clearInterval(_gisInterval); initGoogleSSO(); }
-}, 100);
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   errAlert.classList.add("hidden");
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Memproses...';
 
   const fd = new FormData(form);
+  if (fd.get("password") !== fd.get("confirm_password")) {
+    showError("Konfirmasi password tidak cocok");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Menyimpan...';
+
   try {
-    const res = await Api.post("/login", {
-      email: fd.get("email"),
+    const res = await Api.post("/auth/reset-password", {
+      token: token,
       password: fd.get("password"),
     });
-    if (res && res.token) {
-      Auth.setToken(res.token);
-      if (res.user) Auth.setUser(res.user);
-      location.href = Auth.nextDest();
-    } else {
-      showError("Response tidak valid dari server");
-    }
+    form.classList.add("hidden");
+    okMsg.textContent = (res && res.message) || "Password berhasil diubah — silakan login.";
+    okAlert.classList.remove("hidden");
+    setTimeout(() => { location.href = "/login/"; }, 2500);
   } catch (err) {
-    showError(err.message || "Login gagal");
-  } finally {
+    showError(err.message || "Gagal menyimpan password baru");
     submitBtn.disabled = false;
-    submitBtn.textContent = "Masuk";
+    submitBtn.textContent = "Simpan Password Baru";
   }
 });
 </script>

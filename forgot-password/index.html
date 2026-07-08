@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'; form-action 'self'">
+  <!-- theme-init: honor saved theme before paint (no FOUC) -->
+  <script>try{var t=localStorage.getItem('slr_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <title>Lupa Password — Nulis</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23B19CD8%27 stroke-width=%272%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253%27/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/assets/css/app.css">
+  <link rel="stylesheet" href="/assets/css/custom.css">
+</head>
+<body class="bg-base-200">
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-base-200 p-4">
+  <div class="card w-full max-w-md bg-base-100 shadow-xl">
+    <div class="card-body">
+
+      <!-- Brand -->
+      <div class="text-center mb-6">
+        <img src="/assets/images/logo-rpi.png" alt="RPI Institute" class="h-12 w-auto mx-auto mb-3">
+        <h1 class="text-xl font-bold">Lupa Password</h1>
+        <p class="text-base-content/60 text-sm mt-1">Masukkan email akunmu — kami kirim link untuk membuat password baru.</p>
+      </div>
+
+      <!-- Success message -->
+      <div id="successAlert" class="hidden alert alert-success mb-4" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span id="successMsg"></span>
+      </div>
+
+      <!-- Error message -->
+      <div id="errorAlert" class="hidden alert alert-error mb-4" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span id="errorMsg"></span>
+      </div>
+
+      <form id="forgotForm" class="space-y-4" novalidate>
+        <div class="form-control">
+          <label class="label" for="forgot-email"><span class="label-text font-medium">Email</span></label>
+          <input id="forgot-email" type="email" name="email" placeholder="nama@email.com" class="input input-bordered w-full" required autofocus autocomplete="email">
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-full mt-2">Kirim Link Reset</button>
+      </form>
+
+      <div class="divider text-xs">atau</div>
+
+      <a href="/login/" class="btn btn-outline w-full">Kembali ke Login</a>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/config.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/api.js"></script>
+<script>
+Auth.requireGuest();
+
+const form = document.getElementById("forgotForm");
+const okAlert = document.getElementById("successAlert");
+const okMsg = document.getElementById("successMsg");
+const errAlert = document.getElementById("errorAlert");
+const errMsg = document.getElementById("errorMsg");
+const submitBtn = document.getElementById("submitBtn");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  okAlert.classList.add("hidden");
+  errAlert.classList.add("hidden");
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Mengirim...';
+
+  const fd = new FormData(form);
+  try {
+    const res = await Api.post("/auth/forgot-password", { email: fd.get("email") });
+    okMsg.textContent = (res && res.message) || "Link reset sudah dikirim. Cek inbox (dan folder spam).";
+    okAlert.classList.remove("hidden");
+    form.reset();
+  } catch (err) {
+    errMsg.textContent = err.message || "Gagal mengirim link reset";
+    errAlert.classList.remove("hidden");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Kirim Link Reset";
+  }
+});
+</script>
+</body>
+</html>
