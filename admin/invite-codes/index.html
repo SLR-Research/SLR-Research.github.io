@@ -40,6 +40,7 @@
       <option value="slr-cowork">SLR + AI Cowork</option>
       <option value="scoping">Scoping Review</option>
       <option value="scoping-cowork">Scoping Review + AI Cowork</option>
+      <option value="scoping-cowork-mcp">Scoping Review + AI Cowork (MCP)</option>
       <option value="buku">Penulisan Buku Akademik</option>
       <option value="empiris">Riset Empiris dengan AI</option>
       <option value="modul-quan">Riset Kuantitatif</option>
@@ -105,6 +106,7 @@
           <option value="slr-cowork">SLR + AI Cowork</option>
           <option value="scoping">Scoping Review</option>
           <option value="scoping-cowork">Scoping Review + AI Cowork</option>
+          <option value="scoping-cowork-mcp">Scoping Review + AI Cowork (MCP)</option>
           <option value="buku">Penulisan Buku Akademik</option>
           <option value="empiris">Riset Empiris dengan AI</option>
           <option value="modul-quan">Riset Kuantitatif</option>
@@ -186,7 +188,7 @@ function fmtDateTime(s) {
 }
 
 function trackLabel(slug) {
-  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review", "scoping-cowork": "Scoping Review + AI Cowork", "buku": "Penulisan Buku Akademik", "empiris": "Riset Empiris dengan AI", "modul-quan": "Riset Kuantitatif" };
+  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review", "scoping-cowork": "Scoping Review + AI Cowork", "scoping-cowork-mcp": "Scoping Review + AI Cowork (MCP)", "buku": "Penulisan Buku Akademik", "empiris": "Riset Empiris dengan AI", "modul-quan": "Riset Kuantitatif" };
   return map[slug] || slug;
 }
 
