@@ -28,6 +28,10 @@
       <p class="text-sm text-base-content/60"><span id="userCount">—</span> user terdaftar</p>
     </div>
     <form id="searchForm" class="flex gap-2">
+      <select id="filterEnrolled" class="select select-sm select-bordered">
+        <option value="">Semua user</option>
+        <option value="false">Belum ter-enroll</option>
+      </select>
       <input type="text" name="q" id="searchInput" placeholder="Cari nama atau email..." class="input input-bordered input-sm w-64">
       <button type="submit" class="btn btn-sm btn-primary gap-1">
         <span class="material-symbols-outlined text-sm">search</span> Cari
@@ -56,7 +60,7 @@
         <table class="table">
           <thead>
             <tr>
-              <th scope="col">Nama</th><th scope="col">Email</th><th scope="col">Afiliasi</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Progress</th><th scope="col">Terdaftar</th><th scope="col">Aksi</th>
+              <th scope="col">Nama</th><th scope="col">Email</th><th scope="col">Afiliasi</th><th scope="col">Login</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Progress</th><th scope="col">Terdaftar</th><th scope="col">Aksi</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -71,6 +75,7 @@
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ui.js"></script>
 <script src="/assets/js/pager.js"></script>
+<script src="/assets/js/auth-method.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
 <script>
 Auth.requireAdmin();
@@ -81,14 +86,28 @@ function fmtDate(s) {
   try { return new Date(s).toLocaleDateString("id-ID", {day:"2-digit",month:"short",year:"numeric"}); } catch { return s; }
 }
 
-const initialQ = new URLSearchParams(location.search).get("q") || "";
+const urlParams = new URLSearchParams(location.search);
+const initialQ = urlParams.get("q") || "";
+const initialEnrolled = urlParams.get("enrolled") || "";
 document.getElementById("searchInput").value = initialQ;
-if (initialQ) document.getElementById("resetBtn").classList.remove("hidden");
+document.getElementById("filterEnrolled").value = initialEnrolled;
+if (initialQ || initialEnrolled) document.getElementById("resetBtn").classList.remove("hidden");
+
+// Saringan lewat URL supaya bisa ditautkan langsung dari dashboard.
+document.getElementById("filterEnrolled").addEventListener("change", (e) => {
+  const p = new URLSearchParams();
+  if (initialQ) p.set("q", initialQ);
+  if (e.target.value) p.set("enrolled", e.target.value);
+  location.search = p.toString();
+});
 
 document.getElementById("searchForm").addEventListener("submit", (e) => {
   e.preventDefault();
   const q = document.getElementById("searchInput").value.trim();
-  location.search = q ? "?q=" + encodeURIComponent(q) : "";
+  const p = new URLSearchParams();
+  if (q) p.set("q", q);
+  if (initialEnrolled) p.set("enrolled", initialEnrolled);
+  location.search = p.toString();
 });
 document.getElementById("resetBtn").addEventListener("click", () => location.search = "");
 
@@ -106,6 +125,7 @@ async function load() {
   try {
     const params = new URLSearchParams();
     if (initialQ) params.set("q", initialQ);
+    if (initialEnrolled) params.set("enrolled", initialEnrolled);
     if (currentPage > 1) params.set("page", currentPage);
     const qs = params.toString();
     const d = await Api.get("/admin/users" + (qs ? "?" + qs : ""));
@@ -117,7 +137,9 @@ async function load() {
     if (users.length === 0) {
       document.getElementById("emptyMsg").textContent = initialQ
         ? `Tidak ditemukan user dengan kata kunci "${initialQ}"`
-        : "Belum ada user terdaftar";
+        : initialEnrolled === "false"
+          ? "Semua user sudah ter-enroll di setidaknya satu track"
+          : "Belum ada user terdaftar";
       empty.classList.remove("hidden");
     } else {
       const tbody = document.getElementById("rows");
@@ -129,6 +151,7 @@ async function load() {
           <td><a class="font-medium hover:text-primary"></a></td>
           <td class="text-base-content/70 text-sm"></td>
           <td class="text-base-content/70 text-sm"></td>
+          <td class="text-sm"></td>
           <td><span class="badge badge-sm"></span></td>
           <td><span class="badge badge-sm"></span></td>
           <td><div class="flex items-center gap-2"><progress class="progress progress-primary w-16"></progress><span class="text-xs text-base-content/60"></span></div></td>
@@ -141,27 +164,28 @@ async function load() {
         a.textContent = u.name || "(no name)";
         tds[1].textContent = u.email;
         tds[2].textContent = u.affiliation || "—";
-        const roleBadge = tds[3].querySelector(".badge");
+        AuthMethod.render(tds[3], u.auth_methods);
+        const roleBadge = tds[4].querySelector(".badge");
         roleBadge.textContent = u.role;
         roleBadge.className += " " + (u.role === "admin" ? "badge-warning" : "badge-ghost");
-        const statusBadge = tds[4].querySelector(".badge");
+        const statusBadge = tds[5].querySelector(".badge");
         statusBadge.textContent = u.is_active ? "Aktif" : "Nonaktif";
         statusBadge.className += " " + (u.is_active ? "badge-success" : "badge-error");
         // Penyebut ikut track yang dipilih user (total_modules dari backend).
         // 0 = user belum pilih track, jadi tidak ada progress yang bermakna.
         const completed = u.completed_count || 0;
         const max = u.total_modules || 0;
-        const bar = tds[5].querySelector("progress");
+        const bar = tds[6].querySelector("progress");
         if (max > 0) {
           bar.value = completed;
           bar.max = max;
-          tds[5].querySelector("span").textContent = `${completed}/${max}`;
+          tds[6].querySelector("span").textContent = `${completed}/${max}`;
         } else {
           bar.classList.add("hidden");
-          tds[5].querySelector("span").textContent = "—";
+          tds[6].querySelector("span").textContent = "—";
         }
-        tds[6].textContent = fmtDate(u.created_at);
-        tds[7].querySelector("a").href = detailUrl;
+        tds[7].textContent = fmtDate(u.created_at);
+        tds[8].querySelector("a").href = detailUrl;
         tbody.appendChild(tr);
       });
       document.getElementById("tableWrap").classList.remove("hidden");

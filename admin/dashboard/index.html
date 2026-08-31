@@ -69,6 +69,14 @@
           </table>
           <p id="queueMore" class="hidden text-xs text-base-content/50 mt-2"></p>
         </div>
+        <!-- Kategori yang tidak muncul di antrean manapun: sudah punya akun,
+             belum ter-enroll. Antrean membaca koleksi enrollment, jadi mereka
+             tak terlihat sampai menuntaskan pendaftaran track. -->
+        <a id="noEnrollNote" href="/admin/users/?enrolled=false"
+           class="hidden flex items-center gap-2 text-sm text-warning mt-4 hover:text-primary">
+          <span class="material-symbols-outlined text-base">warning</span>
+          <span id="noEnrollText"></span>
+        </a>
       </div>
     </div>
 
@@ -362,6 +370,14 @@ async function loadStats() {
     // usable, bukan active: kode kedaluwarsa / habis kuota tidak dihitung.
     document.getElementById("stat-invite-active").textContent = d.usable_invite_codes ?? 0;
     document.getElementById("stat-invite-total").textContent = d.total_invite_codes ?? 0;
+
+    const belum = d.users_without_enrollment || 0;
+    const note = document.getElementById("noEnrollNote");
+    note.classList.toggle("hidden", belum === 0);
+    if (belum > 0) {
+      document.getElementById("noEnrollText").textContent =
+        `${belum} user punya akun tapi belum ter-enroll di track manapun — lihat daftarnya`;
+    }
 
     // Visual summary charts (built from the same payload).
     if (window.renderDashboardCharts) renderDashboardCharts(d);

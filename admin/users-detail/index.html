@@ -88,6 +88,7 @@
         <div id="enrollEmpty" class="hidden text-center py-8">
           <span class="material-symbols-outlined text-4xl text-base-content/20 mb-2">lock</span>
           <p class="text-base-content/50">User belum ter-enroll di track manapun.</p>
+          <p class="text-sm text-base-content/40 mt-2" id="enrollEmptyWhy"></p>
         </div>
         <div id="enrollTableWrap" class="hidden overflow-x-auto">
           <table class="table table-sm">
@@ -133,6 +134,7 @@
 <script src="/assets/js/tracks.js"></script>
 <script src="/assets/js/duration.js"></script>
 <script src="/assets/js/enrollment-ui.js"></script>
+<script src="/assets/js/auth-method.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
 <script>
 Auth.requireAdmin();
@@ -162,6 +164,18 @@ function renderEnrollments(list, user) {
   rows.innerHTML = "";
   empty.classList.toggle("hidden", list.length > 0);
   wrap.classList.toggle("hidden", list.length === 0);
+
+  // Kartu kosong tanpa keterangan menyisakan pertanyaan. Sebutkan langkah
+  // pendaftaran mana yang belum dituntaskan — akun Google masuk tanpa mengisi
+  // afiliasi maupun track, jadi kondisi ini wajar di jalur itu.
+  if (list.length === 0) {
+    const kurang = [];
+    if (!user.affiliation || user.affiliation.trim().length < 2) kurang.push("belum mengisi afiliasi");
+    if (!user.selected_track) kurang.push("belum memilih track");
+    document.getElementById("enrollEmptyWhy").textContent = kurang.length
+      ? "Pendaftaran berhenti di tengah: " + kurang.join(" dan ") + "."
+      : "Profil sudah lengkap, tapi belum menuntaskan pendaftaran track.";
+  }
 
   list.forEach((e) => {
     const tr = document.createElement("tr");
@@ -220,6 +234,15 @@ async function load() {
     statusBadge.className = "badge gap-1 " + (u.is_active ? "badge-success" : "badge-error");
     statusBadge.textContent = u.is_active ? "Aktif" : "Nonaktif";
     badges.appendChild(statusBadge);
+    const authWrap = document.createElement("span");
+    AuthMethod.render(authWrap, d.auth_methods);
+    if ((d.auth_methods || []).length > 0) {
+      const lbl = document.createElement("span");
+      lbl.className = "text-xs text-base-content/50";
+      lbl.textContent = "Login:";
+      badges.appendChild(lbl);
+      badges.appendChild(authWrap);
+    }
     if (u.affiliation) {
       const affBadge = document.createElement("span");
       affBadge.className = "badge badge-outline gap-1";
