@@ -170,6 +170,8 @@
         </div>
       </div>
 
+      <p class="text-xs text-warning" id="editTrialScope"></p>
+
       <div class="form-control">
         <label class="label"><span class="label-text font-medium">Expires <span class="text-base-content/50 text-xs">(kosongkan = tidak pernah expire)</span></span></label>
         <input type="datetime-local" name="expires_at" id="editExpires" class="input input-bordered">
@@ -427,6 +429,13 @@ function openEditModal(c) {
   syncEditTrial();
   document.getElementById("editExpires").value = toLocalInputValue(c.expires_at);
   document.getElementById("editNotes").value = c.notes || "";
+  // Durasi kode disalin jadi tanggal mati saat kode dipakai (CreateEnrollment),
+  // tidak dibaca ulang sesudahnya. Tanpa catatan ini, admin mengira
+  // memperpanjang kode ikut memperpanjang orang yang sudah memakainya.
+  const dipakai = c.used_count || 0;
+  document.getElementById("editTrialScope").textContent = dipakai > 0
+    ? `Durasi berlaku untuk pemakaian berikutnya. ${dipakai} enrollment yang sudah memakai kode ini tetap dengan tanggal lamanya — ubah lewat tombol Extend di halaman Enrollments.`
+    : "Durasi berlaku saat kode dipakai, lalu disalin jadi tanggal berakhir di enrollment.";
   document.getElementById("editUsageHint").textContent =
     (c.used_count || 0) > 0
       ? "0 = unlimited, atau minimal " + c.used_count

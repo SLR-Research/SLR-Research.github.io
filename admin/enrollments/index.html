@@ -64,7 +64,7 @@
               <th scope="col">Track</th>
               <th scope="col">Status</th>
               <th scope="col">Trial Sampai</th>
-              <th scope="col">Kode Dipakai</th>
+              <th scope="col" title="Kode yang dipakai saat mendaftar. Durasi trial ditetapkan saat itu — mengubah kodenya belakangan tidak menggeser tanggal ini.">Kode Dipakai</th>
               <th scope="col">Daftar</th>
               <th scope="col">Aksi</th>
             </tr>
@@ -178,7 +178,11 @@ async function loadEnrollments() {
 
       tr.querySelector("[data-statuscell]").appendChild(EnrollmentUI.statusBadge(e));
       EnrollmentUI.fillTrialCell(tr.querySelector("[data-trial]"), e);
-      tr.querySelector("[data-code]").textContent = e.used_invite_code || "—";
+      const codeCell = tr.querySelector("[data-code]");
+      codeCell.textContent = e.used_invite_code || "—";
+      if (e.used_invite_code) {
+        codeCell.title = "Durasi trial ditetapkan saat kode ini dipakai. Mengedit kodenya sekarang tidak menggeser tanggal berakhir — pakai Extend.";
+      }
       tr.querySelector("[data-date]").textContent = fmtDateTime(e.enrolled_at);
       EnrollmentUI.renderActions(tr.querySelector("[data-actions]"), e, {
         context: e.user_email,
