@@ -62,6 +62,7 @@
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <div id="pager" class="hidden"></div>
     </div>
   </div>
 </div>
@@ -69,6 +70,7 @@
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ui.js"></script>
+<script src="/assets/js/pager.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
 <script>
 Auth.requireAdmin();
@@ -90,23 +92,36 @@ document.getElementById("searchForm").addEventListener("submit", (e) => {
 });
 document.getElementById("resetBtn").addEventListener("click", () => location.search = "");
 
-(async function load() {
+let currentPage = 1;
+
+async function load() {
   const errBox = document.getElementById("errorState");
   const loading = document.getElementById("loading");
+  const tableWrap = document.getElementById("tableWrap");
+  const empty = document.getElementById("emptyState");
+  loading.classList.remove("hidden");
+  tableWrap.classList.add("hidden");
+  empty.classList.add("hidden");
+  errBox.classList.add("hidden");
   try {
-    const path = "/admin/users" + (initialQ ? "?q=" + encodeURIComponent(initialQ) : "");
-    const d = await Api.get(path);
+    const params = new URLSearchParams();
+    if (initialQ) params.set("q", initialQ);
+    if (currentPage > 1) params.set("page", currentPage);
+    const qs = params.toString();
+    const d = await Api.get("/admin/users" + (qs ? "?" + qs : ""));
     loading.classList.add("hidden");
-    document.getElementById("userCount").textContent = d.count;
+    // Jumlah keseluruhan, bukan jumlah baris di halaman ini.
+    document.getElementById("userCount").textContent = d.total ?? d.count;
+    Pager.render(document.getElementById("pager"), d, (p) => { currentPage = p; load(); });
     const users = d.users || [];
     if (users.length === 0) {
-      const empty = document.getElementById("emptyState");
       document.getElementById("emptyMsg").textContent = initialQ
         ? `Tidak ditemukan user dengan kata kunci "${initialQ}"`
         : "Belum ada user terdaftar";
       empty.classList.remove("hidden");
     } else {
       const tbody = document.getElementById("rows");
+      tbody.innerHTML = "";
       users.forEach((u) => {
         const tr = document.createElement("tr");
         tr.className = "hover";
@@ -156,7 +171,9 @@ document.getElementById("resetBtn").addEventListener("click", () => location.sea
     errBox.textContent = err.status === 403 ? "Akses admin diperlukan" : (err.message || "Gagal memuat user");
     errBox.classList.remove("hidden");
   }
-})();
+}
+
+load();
 </script>
 </body>
 </html>

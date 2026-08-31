@@ -31,23 +31,13 @@
 
   <!-- Filter Tabs -->
   <div class="tabs tabs-boxed bg-base-200 inline-flex mb-4">
-    <button class="tab" data-filter="">Semua</button>
-    <button class="tab" data-filter="pending">Pending</button>
-    <button class="tab" data-filter="trial">Trial</button>
-    <button class="tab" data-filter="approved">Approved</button>
+    <button class="tab" data-filter="">Semua <span class="ml-1 opacity-60" data-count="all"></span></button>
+    <button class="tab" data-filter="pending">Pending <span class="ml-1 opacity-60" data-count="pending"></span></button>
+    <button class="tab" data-filter="trial">Trial <span class="ml-1 opacity-60" data-count="trial"></span></button>
+    <button class="tab" data-filter="approved">Approved <span class="ml-1 opacity-60" data-count="approved"></span></button>
   </div>
 
-  <select id="filterTrack" class="select select-sm select-bordered ml-2">
-    <option value="">Semua track</option>
-    <option value="slr">SLR AI</option>
-    <option value="slr-cowork">SLR + AI Cowork</option>
-    <option value="scoping">Scoping Review</option>
-    <option value="scoping-cowork">Scoping Review + AI Cowork</option>
-    <option value="scoping-cowork-mcp">Scoping Review + AI Cowork (MCP)</option>
-    <option value="buku">Penulisan Buku Akademik</option>
-    <option value="empiris">Riset Empiris dengan AI</option>
-    <option value="modul-quan">Riset Kuantitatif</option>
-  </select>
+  <select id="filterTrack" class="select select-sm select-bordered ml-2"></select>
 
   <div id="errorState" class="hidden alert alert-error my-4 text-sm"></div>
   <div id="successToast" class="hidden alert alert-success my-4 text-sm"></div>
@@ -82,62 +72,34 @@
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <div id="pager" class="hidden"></div>
     </div>
   </div>
 </div>
 
-<!-- Set Trial Modal -->
-<dialog id="trialModal" class="modal">
-  <div class="modal-box max-w-sm">
-    <h3 class="font-bold text-lg mb-3">Set Trial</h3>
-    <p class="text-sm opacity-70 mb-4" id="trialContext"></p>
-
-    <div class="form-control">
-      <label class="label"><span class="label-text font-medium">Durasi Trial</span></label>
-      <div class="flex gap-2">
-        <input id="trialValue" type="number" class="input input-bordered w-full" value="7" min="1">
-        <select id="trialUnit" class="select select-bordered"></select>
-      </div>
-      <label class="label"><span class="label-text-alt text-base-content/50">TrialEndsAt di-set ke sekarang + durasi ini <span id="trialHint"></span></span></label>
-    </div>
-
-    <div class="modal-action">
-      <button class="btn" onclick="document.getElementById('trialModal').close()">Batal</button>
-      <button id="confirmTrialBtn" class="btn btn-primary">Set Trial</button>
-    </div>
-  </div>
-  <form method="dialog" class="modal-backdrop"><button>close</button></form>
-</dialog>
-
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ui.js"></script>
-<script src="/assets/js/admin-nav.js"></script>
+<script src="/assets/js/pager.js"></script>
+<script src="/assets/js/tracks.js"></script>
 <script src="/assets/js/duration.js"></script>
+<script src="/assets/js/enrollment-ui.js"></script>
+<script src="/assets/js/admin-nav.js"></script>
 <script>
 Auth.requireAdmin();
 const u = Auth.getUser() || {};
 
 const initialStatus = new URLSearchParams(location.search).get("status") || "";
 
-function fmtDate(s) {
-  if (!s) return "—";
-  try { return new Date(s).toLocaleDateString("id-ID", {day:"2-digit",month:"short",year:"numeric"}); } catch { return s; }
-}
 function fmtDateTime(s) {
   if (!s) return "—";
   try { return new Date(s).toLocaleString("id-ID", {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch { return s; }
 }
 
-function trackLabel(slug) {
-  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review", "scoping-cowork": "Scoping Review + AI Cowork", "scoping-cowork-mcp": "Scoping Review + AI Cowork (MCP)", "buku": "Penulisan Buku Akademik", "empiris": "Riset Empiris dengan AI", "modul-quan": "Riset Kuantitatif" };
-  return map[slug] || slug;
-}
-
-function showSuccess(msg) { UI.toast(msg, "success"); }
 function showError(msg) { UI.toast(msg, "error"); }
 
 let currentFilter = initialStatus;
+let currentPage = 1;
 
 function setActiveTab() {
   document.querySelectorAll('[data-filter]').forEach(btn => {
@@ -148,11 +110,15 @@ function setActiveTab() {
 document.querySelectorAll('[data-filter]').forEach(btn => {
   btn.addEventListener("click", () => {
     currentFilter = btn.dataset.filter;
+    currentPage = 1;
     setActiveTab();
     loadEnrollments();
   });
 });
-document.getElementById("filterTrack").addEventListener("change", loadEnrollments);
+document.getElementById("filterTrack").addEventListener("change", () => {
+  currentPage = 1;
+  loadEnrollments();
+});
 
 async function loadEnrollments() {
   const loading = document.getElementById("loading");
@@ -167,13 +133,22 @@ async function loadEnrollments() {
   if (currentFilter) params.set("status", currentFilter);
   const trackF = document.getElementById("filterTrack").value;
   if (trackF) params.set("track", trackF);
+  if (currentPage > 1) params.set("page", currentPage);
   const qs = params.toString() ? "?" + params.toString() : "";
 
   try {
     const data = await Api.get("/admin/enrollments" + qs);
     loading.classList.add("hidden");
+    // Angka per tab supaya admin tahu isi tiap antrean tanpa mengkliknya.
+    // Menghormati filter track yang sedang aktif.
+    const counts = data.counts || {};
+    document.querySelectorAll("[data-count]").forEach((el) => {
+      const n = counts[el.dataset.count];
+      el.textContent = n === undefined ? "" : "(" + n + ")";
+    });
     const enrolls = data.enrollments || [];
-    document.getElementById("enrollCount").textContent = enrolls.length;
+    document.getElementById("enrollCount").textContent = data.total ?? enrolls.length;
+    Pager.render(document.getElementById("pager"), data, (p) => { currentPage = p; loadEnrollments(); });
     if (enrolls.length === 0) {
       emptyState.classList.remove("hidden");
       return;
@@ -199,81 +174,16 @@ async function loadEnrollments() {
       tr.querySelector("[data-name]").textContent = e.user_name || "(no name)";
       tr.querySelector("[data-email]").textContent = e.user_email || "";
       tr.querySelector("[data-aff]").textContent = e.user_affiliation || "";
-      tr.querySelector("[data-track]").textContent = trackLabel(e.track);
+      tr.querySelector("[data-track]").textContent = Tracks.label(e.track);
 
-      // Status cell
-      const statusCell = tr.querySelector("[data-statuscell]");
-      let statusBadge = "";
-      if (e.status === "pending") {
-        statusBadge = `<span class="badge badge-warning gap-1"><span class="material-symbols-outlined text-xs">hourglass_empty</span> Pending</span>`;
-      } else if (e.status === "trial" && e.is_expired_trial) {
-        statusBadge = `<span class="badge badge-error gap-1"><span class="material-symbols-outlined text-xs">history_toggle_off</span> Trial Expired</span>`;
-      } else if (e.status === "trial") {
-        statusBadge = `<span class="badge badge-info gap-1"><span class="material-symbols-outlined text-xs">schedule</span> Trial</span>`;
-      } else if (e.status === "approved") {
-        statusBadge = `<span class="badge badge-success gap-1"><span class="material-symbols-outlined text-xs">verified</span> Approved</span>`;
-      }
-      statusCell.innerHTML = statusBadge;
-
-      tr.querySelector("[data-trial]").textContent = e.trial_ends_at ? fmtDate(e.trial_ends_at) : "—";
+      tr.querySelector("[data-statuscell]").appendChild(EnrollmentUI.statusBadge(e));
+      EnrollmentUI.fillTrialCell(tr.querySelector("[data-trial]"), e);
       tr.querySelector("[data-code]").textContent = e.used_invite_code || "—";
       tr.querySelector("[data-date]").textContent = fmtDateTime(e.enrolled_at);
-
-      // Action buttons depend on status
-      const actions = tr.querySelector("[data-actions]");
-      if (e.status !== "approved") {
-        const approveBtn = document.createElement("button");
-        approveBtn.className = "btn btn-success btn-xs gap-1";
-        approveBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">check</span> Approve';
-        approveBtn.addEventListener("click", async () => {
-          if (!await UI.confirm({ title: "Approve Enrollment",
-              message: `Approve ${e.user_email} untuk track ${trackLabel(e.track)}?`,
-              confirmText: "Approve" })) return;
-          try {
-            await Api.post(`/admin/enrollments/${e.id}/approve`);
-            showSuccess("Berhasil di-approve");
-            loadEnrollments();
-          } catch (err) { showError("Gagal approve: " + err.message); }
-        });
-        actions.appendChild(approveBtn);
-      }
-
-      if (e.status === "pending" || (e.status === "trial" && e.is_expired_trial)) {
-        const trialBtn = document.createElement("button");
-        trialBtn.className = "btn btn-info btn-xs gap-1";
-        trialBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">schedule</span> Trial';
-        trialBtn.addEventListener("click", () => {
-          openTrialModal(e);
-        });
-        actions.appendChild(trialBtn);
-      }
-
-      if (e.status === "trial" && !e.is_expired_trial) {
-        const extendBtn = document.createElement("button");
-        extendBtn.className = "btn btn-ghost btn-xs gap-1";
-        extendBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">update</span> Extend';
-        extendBtn.title = "Reset trial deadline ke now+N hari";
-        extendBtn.addEventListener("click", () => openTrialModal(e));
-        actions.appendChild(extendBtn);
-      }
-
-      if (e.status === "approved" || e.status === "trial") {
-        const revokeBtn = document.createElement("button");
-        revokeBtn.className = "btn btn-error btn-outline btn-xs gap-1";
-        revokeBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">block</span>';
-        revokeBtn.title = "Revoke (kembalikan ke pending)";
-        revokeBtn.addEventListener("click", async () => {
-          if (!await UI.confirm({ title: "Revoke Akses",
-              message: `Revoke akses ${e.user_email} di track ${trackLabel(e.track)}? Status akan kembali ke pending.`,
-              confirmText: "Revoke", danger: true })) return;
-          try {
-            await Api.post(`/admin/enrollments/${e.id}/revoke`);
-            showSuccess("Berhasil revoke");
-            loadEnrollments();
-          } catch (err) { showError("Gagal revoke: " + err.message); }
-        });
-        actions.appendChild(revokeBtn);
-      }
+      EnrollmentUI.renderActions(tr.querySelector("[data-actions]"), e, {
+        context: e.user_email,
+        reload: loadEnrollments,
+      });
 
       tbody.appendChild(tr);
     });
@@ -284,35 +194,12 @@ async function loadEnrollments() {
   }
 }
 
-const syncTrial = Duration.wireTrialInput("trialValue", "trialUnit", "trialHint");
-
-let _activeTrialEnrollId = null;
-function openTrialModal(e) {
-  _activeTrialEnrollId = e.id;
-  document.getElementById("trialContext").textContent =
-    `${e.user_email} → track ${trackLabel(e.track)}`;
-  // Extend: mulai dari sisa durasi kode/trial berjalan tidak relevan — backend
-  // selalu reset ke sekarang + N, jadi default balik ke 7 hari.
-  Duration.set("trialValue", "trialUnit", 7);
-  syncTrial();
-  document.getElementById("trialModal").showModal();
-}
-
-document.getElementById("confirmTrialBtn").addEventListener("click", async () => {
-  const days = Duration.toDays(document.getElementById("trialValue").value, document.getElementById("trialUnit").value) || 7;
-  if (!_activeTrialEnrollId) return;
-  try {
-    await Api.post(`/admin/enrollments/${_activeTrialEnrollId}/set-trial`, { days });
-    document.getElementById("trialModal").close();
-    showSuccess(`Trial di-set ${Duration.label(days)}`);
-    loadEnrollments();
-  } catch (err) {
-    showError("Gagal set trial: " + err.message);
-  }
-});
-
 setActiveTab();
-loadEnrollments();
+(async function init() {
+  await Tracks.load();
+  Tracks.fillSelect(document.getElementById("filterTrack"), { placeholder: "Semua track" });
+  loadEnrollments();
+})();
 </script>
 </body>
 </html>

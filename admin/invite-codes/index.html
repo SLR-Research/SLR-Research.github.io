@@ -25,7 +25,7 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
       <h1 class="text-2xl font-bold">Invite Codes</h1>
-      <p class="text-sm text-base-content/60">Generate kode untuk fast-track user ke status trial</p>
+      <p class="text-sm text-base-content/60"><span id="codeSummary">Generate kode untuk fast-track user ke status trial</span></p>
     </div>
     <button class="btn btn-primary gap-2" onclick="document.getElementById('createModal').showModal()">
       <span class="material-symbols-outlined">add</span> Generate Kode Baru
@@ -34,17 +34,7 @@
 
   <!-- Filters -->
   <div class="flex gap-2 mb-4 flex-wrap">
-    <select id="filterTrack" class="select select-sm select-bordered">
-      <option value="">Semua track</option>
-      <option value="slr">SLR AI</option>
-      <option value="slr-cowork">SLR + AI Cowork</option>
-      <option value="scoping">Scoping Review</option>
-      <option value="scoping-cowork">Scoping Review + AI Cowork</option>
-      <option value="scoping-cowork-mcp">Scoping Review + AI Cowork (MCP)</option>
-      <option value="buku">Penulisan Buku Akademik</option>
-      <option value="empiris">Riset Empiris dengan AI</option>
-      <option value="modul-quan">Riset Kuantitatif</option>
-    </select>
+    <select id="filterTrack" class="select select-sm select-bordered"></select>
     <select id="filterActive" class="select select-sm select-bordered">
       <option value="">Aktif & Nonaktif</option>
       <option value="true">Hanya Aktif</option>
@@ -88,6 +78,7 @@
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <div id="pager" class="hidden"></div>
     </div>
   </div>
 </div>
@@ -100,17 +91,7 @@
     <form id="createForm" class="space-y-3">
       <div class="form-control">
         <label class="label"><span class="label-text font-medium">Track <span class="text-error">*</span></span></label>
-        <select name="track" class="select select-bordered" required>
-          <option value="">— Pilih track —</option>
-          <option value="slr">SLR AI</option>
-          <option value="slr-cowork">SLR + AI Cowork</option>
-          <option value="scoping">Scoping Review</option>
-          <option value="scoping-cowork">Scoping Review + AI Cowork</option>
-          <option value="scoping-cowork-mcp">Scoping Review + AI Cowork (MCP)</option>
-          <option value="buku">Penulisan Buku Akademik</option>
-          <option value="empiris">Riset Empiris dengan AI</option>
-          <option value="modul-quan">Riset Kuantitatif</option>
-        </select>
+        <select name="track" class="select select-bordered" required></select>
       </div>
 
       <div class="form-control">
@@ -231,7 +212,9 @@
 
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
+<script src="/assets/js/tracks.js"></script>
 <script src="/assets/js/ui.js"></script>
+<script src="/assets/js/pager.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
 <script src="/assets/js/duration.js"></script>
 <script>
@@ -247,13 +230,20 @@ function fmtDateTime(s) {
   try { return new Date(s).toLocaleString("id-ID", {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch { return s; }
 }
 
-function trackLabel(slug) {
-  const map = { "slr": "SLR AI", "slr-cowork": "SLR + AI Cowork", "scoping": "Scoping Review", "scoping-cowork": "Scoping Review + AI Cowork", "scoping-cowork-mcp": "Scoping Review + AI Cowork (MCP)", "buku": "Penulisan Buku Akademik", "empiris": "Riset Empiris dengan AI", "modul-quan": "Riset Kuantitatif" };
-  return map[slug] || slug;
-}
-
 function showSuccess(msg) { UI.toast(msg, "success"); }
 function showError(msg) { UI.toast(msg, "error"); }
+
+// Kondisi kode datang terhitung dari backend (model.InviteCode.State) supaya
+// panel tidak menyimpulkannya sendiri dari is_active dan salah melabeli kode
+// yang sudah kedaluwarsa atau habis kuota sebagai "Aktif".
+const STATE_BADGE = {
+  active:    { label: "Aktif",       cls: "badge-success", hint: "Bisa dipakai" },
+  inactive:  { label: "Nonaktif",    cls: "badge-error",   hint: "Dimatikan admin" },
+  expired:   { label: "Kedaluwarsa", cls: "badge-warning", hint: "Sudah lewat tanggal expire" },
+  exhausted: { label: "Kuota habis", cls: "badge-warning", hint: "Pemakaian sudah mencapai batas" },
+};
+
+let currentPage = 1;
 
 async function loadCodes() {
   const loading = document.getElementById("loading");
@@ -269,12 +259,18 @@ async function loadCodes() {
   const active = document.getElementById("filterActive").value;
   if (track) params.set("track", track);
   if (active) params.set("active", active);
+  if (currentPage > 1) params.set("page", currentPage);
   const qs = params.toString() ? "?" + params.toString() : "";
 
   try {
     const data = await Api.get("/admin/invite-codes" + qs);
     loading.classList.add("hidden");
     const codes = data.invite_codes || [];
+    Pager.render(document.getElementById("pager"), data, (p) => { currentPage = p; loadCodes(); });
+    document.getElementById("codeSummary").textContent =
+      codes.length && data.usable_count !== undefined
+        ? `${data.usable_count} dari ${data.total ?? codes.length} kode bisa dipakai`
+        : "Generate kode untuk fast-track user ke status trial";
     if (codes.length === 0) {
       emptyState.classList.remove("hidden");
       return;
@@ -283,7 +279,9 @@ async function loadCodes() {
     tbody.innerHTML = "";
     codes.forEach(c => {
       const tr = document.createElement("tr");
-      tr.className = c.is_active ? "" : "opacity-50";
+      // Redupkan yang tidak bisa dipakai — termasuk yang kedaluwarsa atau
+      // habis kuota, bukan hanya yang dimatikan admin.
+      tr.className = c.is_usable ? "" : "opacity-50";
       const usage = c.max_uses > 0 ? `${c.used_count}/${c.max_uses}` : `${c.used_count}`;
       tr.innerHTML = `
         <td><span class="font-mono font-bold" data-code></span></td>
@@ -300,10 +298,12 @@ async function loadCodes() {
           <button class="btn btn-ghost btn-xs gap-1" data-toggle><span class="material-symbols-outlined" style="font-size:16px"></span></button>
         </td>`;
       tr.querySelector("[data-code]").textContent = c.code;
-      tr.querySelector("[data-track]").textContent = trackLabel(c.track);
+      tr.querySelector("[data-track]").textContent = Tracks.label(c.track);
       const statusBadge = tr.querySelector("[data-status]");
-      statusBadge.textContent = c.is_active ? "Aktif" : "Nonaktif";
-      statusBadge.className += " " + (c.is_active ? "badge-success" : "badge-error");
+      const st = STATE_BADGE[c.state] || STATE_BADGE.active;
+      statusBadge.textContent = st.label;
+      statusBadge.className += " " + st.cls;
+      statusBadge.title = st.hint;
       tr.querySelector("[data-usage]").textContent = usage + (c.max_uses === 0 ? " (unlimited)" : "");
       const daysCell = tr.querySelector("[data-days]");
       daysCell.textContent = Duration.label(c.trial_days || 7);
@@ -347,8 +347,9 @@ async function loadCodes() {
   }
 }
 
-document.getElementById("filterTrack").addEventListener("change", loadCodes);
-document.getElementById("filterActive").addEventListener("change", loadCodes);
+const resetAndLoad = () => { currentPage = 1; loadCodes(); };
+document.getElementById("filterTrack").addEventListener("change", resetAndLoad);
+document.getElementById("filterActive").addEventListener("change", resetAndLoad);
 
 document.getElementById("createForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -391,16 +392,6 @@ document.getElementById("createForm").addEventListener("submit", async (e) => {
 });
 
 // ── Edit ────────────────────────────────────────────────────────────────
-// Opsi track di-clone dari form create supaya daftar track cuma ditulis
-// sekali di halaman ini.
-(function initEditTrackOptions() {
-  const src = document.querySelector('#createForm select[name="track"]');
-  const dst = document.getElementById("editTrack");
-  Array.from(src.options).forEach((o) => {
-    if (o.value) dst.appendChild(o.cloneNode(true));
-  });
-})();
-
 // datetime-local butuh "YYYY-MM-DDTHH:MM" waktu lokal, bukan ISO UTC.
 function toLocalInputValue(iso) {
   if (!iso) return "";
@@ -426,7 +417,7 @@ function openEditModal(c) {
   if (trackSel.value !== c.track) {
     const opt = document.createElement("option");
     opt.value = c.track;
-    opt.textContent = trackLabel(c.track) + " (tidak dikenal)";
+    opt.textContent = Tracks.label(c.track) + " (tidak dikenal)";
     trackSel.appendChild(opt);
     trackSel.value = c.track;
   }
@@ -484,7 +475,13 @@ document.getElementById("copyCodeBtn").addEventListener("click", async () => {
   catch { showError("Gagal copy clipboard"); }
 });
 
-loadCodes();
+(async function init() {
+  await Tracks.load();
+  Tracks.fillSelect(document.getElementById("filterTrack"), { placeholder: "Semua track" });
+  Tracks.fillSelect(document.querySelector('#createForm select[name="track"]'), { placeholder: "— Pilih track —" });
+  Tracks.fillSelect(document.getElementById("editTrack"));
+  loadCodes();
+})();
 </script>
 </body>
 </html>

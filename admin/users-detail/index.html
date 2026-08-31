@@ -76,6 +76,30 @@
       </div>
     </div>
 
+    <!-- Akses per Track -->
+    <div class="card bg-base-100 border border-base-200 mb-6">
+      <div class="card-body">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">Akses per Track</h2>
+          <a href="/admin/enrollments/" class="btn btn-sm btn-ghost gap-1">
+            Semua enrollment <span class="material-symbols-outlined text-sm">arrow_forward</span>
+          </a>
+        </div>
+        <div id="enrollEmpty" class="hidden text-center py-8">
+          <span class="material-symbols-outlined text-4xl text-base-content/20 mb-2">lock</span>
+          <p class="text-base-content/50">User belum ter-enroll di track manapun.</p>
+        </div>
+        <div id="enrollTableWrap" class="hidden overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr><th scope="col">Track</th><th scope="col">Status</th><th scope="col">Trial</th><th scope="col">Kode</th><th scope="col">Daftar</th><th scope="col">Aksi</th></tr>
+            </thead>
+            <tbody id="enrollRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Progress Section -->
     <div class="card bg-base-100 border border-base-200">
       <div class="card-body">
@@ -106,6 +130,9 @@
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ui.js"></script>
+<script src="/assets/js/tracks.js"></script>
+<script src="/assets/js/duration.js"></script>
+<script src="/assets/js/enrollment-ui.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
 <script>
 Auth.requireAdmin();
@@ -123,6 +150,50 @@ function showAction(ok, msg) {
   const errBox = document.getElementById("actionErr");
   if (ok) { okBox.textContent = msg; okBox.classList.remove("hidden"); errBox.classList.add("hidden"); }
   else { errBox.textContent = msg; errBox.classList.remove("hidden"); okBox.classList.add("hidden"); }
+}
+
+// Akses per track ditampilkan di sini supaya pertanyaan "kenapa user ini
+// tidak bisa buka modul X" terjawab tanpa pindah ke /admin/enrollments.
+// Tombolnya memakai EnrollmentUI yang sama dengan halaman enrollment.
+function renderEnrollments(list, user) {
+  const empty = document.getElementById("enrollEmpty");
+  const wrap = document.getElementById("enrollTableWrap");
+  const rows = document.getElementById("enrollRows");
+  rows.innerHTML = "";
+  empty.classList.toggle("hidden", list.length > 0);
+  wrap.classList.toggle("hidden", list.length === 0);
+
+  list.forEach((e) => {
+    const tr = document.createElement("tr");
+    tr.className = "hover";
+    tr.innerHTML = `
+      <td class="font-medium" data-track></td>
+      <td data-status></td>
+      <td class="text-sm" data-trial></td>
+      <td class="text-sm font-mono" data-code></td>
+      <td class="text-xs text-base-content/60" data-date></td>
+      <td><div class="flex gap-1" data-actions></div></td>`;
+
+    const tds = tr.querySelectorAll("td");
+    tds[0].textContent = Tracks.label(e.track);
+    // Tandai track yang sedang aktif — progress di bawah dihitung untuk ini.
+    if (e.track === user.selected_track) {
+      const b = document.createElement("span");
+      b.className = "badge badge-sm badge-primary ml-2";
+      b.textContent = "aktif";
+      b.title = "Track yang sedang dipilih user";
+      tds[0].appendChild(b);
+    }
+    tds[1].appendChild(EnrollmentUI.statusBadge(e));
+    EnrollmentUI.fillTrialCell(tds[2], e);
+    tds[3].textContent = e.used_invite_code || "—";
+    tds[4].textContent = EnrollmentUI.fmtDate(e.enrolled_at);
+    EnrollmentUI.renderActions(tds[5].querySelector("[data-actions]"), e, {
+      context: user.email,
+      reload: load,
+    });
+    rows.appendChild(tr);
+  });
 }
 
 async function load() {
@@ -179,6 +250,8 @@ async function load() {
       tb.classList.remove("btn-error");
     }
     document.getElementById("roleSelect").value = u.role;
+
+    renderEnrollments(d.enrollments || [], u);
 
     // Progress bar. total = 0 berarti user belum pilih track — jangan
     // mengarang penyebut.
@@ -263,7 +336,10 @@ document.getElementById("changeRoleBtn").addEventListener("click", async () => {
   } catch (err) { showAction(false, err.message || "Gagal update role"); }
 });
 
-load();
+(async function init() {
+  await Tracks.load();
+  load();
+})();
 </script>
 </body>
 </html>
