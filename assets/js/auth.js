@@ -60,6 +60,19 @@
       return true;
     },
 
+    // requireAdmin: chain after requireProfile. Backend tetap yang menegakkan
+    // (RequireAdmin → 403); ini supaya user biasa tidak melihat kerangka
+    // halaman admin lebih dulu lalu ditolak API beberapa saat kemudian.
+    requireAdmin() {
+      if (!this.requireProfile()) return false;
+      const u = this.getUser() || {};
+      if (u.role !== "admin") {
+        window.location.href = "/modul/?slug=home";
+        return false;
+      }
+      return true;
+    },
+
     // requireGuest: redirect ke flow yang sesuai kalau sudah login.
     // Order: profile-complete (kalau no affiliation) → select-track (kalau no track) → modul home
     requireGuest() {

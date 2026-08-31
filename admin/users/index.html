@@ -71,7 +71,7 @@
 <script src="/assets/js/ui.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
 <script>
-Auth.requireProfile();
+Auth.requireAdmin();
 const u = Auth.getUser() || {};
 
 function fmtDate(s) {
@@ -132,11 +132,19 @@ document.getElementById("resetBtn").addEventListener("click", () => location.sea
         const statusBadge = tds[4].querySelector(".badge");
         statusBadge.textContent = u.is_active ? "Aktif" : "Nonaktif";
         statusBadge.className += " " + (u.is_active ? "badge-success" : "badge-error");
+        // Penyebut ikut track yang dipilih user (total_modules dari backend).
+        // 0 = user belum pilih track, jadi tidak ada progress yang bermakna.
         const completed = u.completed_count || 0;
-        const max = 10;
-        tds[5].querySelector("progress").value = completed;
-        tds[5].querySelector("progress").max = max;
-        tds[5].querySelector("span").textContent = `${completed}/${max}`;
+        const max = u.total_modules || 0;
+        const bar = tds[5].querySelector("progress");
+        if (max > 0) {
+          bar.value = completed;
+          bar.max = max;
+          tds[5].querySelector("span").textContent = `${completed}/${max}`;
+        } else {
+          bar.classList.add("hidden");
+          tds[5].querySelector("span").textContent = "—";
+        }
         tds[6].textContent = fmtDate(u.created_at);
         tds[7].querySelector("a").href = detailUrl;
         tbody.appendChild(tr);

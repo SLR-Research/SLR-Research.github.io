@@ -108,7 +108,7 @@
 <script src="/assets/js/ui.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
 <script>
-Auth.requireProfile();
+Auth.requireAdmin();
 
 const id = new URLSearchParams(location.search).get("id");
 if (!id) location.href = "/admin/users/";
@@ -180,18 +180,31 @@ async function load() {
     }
     document.getElementById("roleSelect").value = u.role;
 
-    // Progress bar
-    document.getElementById("progressDone").textContent = d.completed || 0;
-    document.getElementById("progressTotal").textContent = d.total || 10;
-    document.getElementById("progressBar").value = d.completed || 0;
-    document.getElementById("progressBar").max = d.total || 10;
+    // Progress bar. total = 0 berarti user belum pilih track — jangan
+    // mengarang penyebut.
+    const done = d.completed || 0;
+    const total = d.total || 0;
+    const bar = document.getElementById("progressBar");
+    if (total > 0) {
+      bar.classList.remove("hidden");
+      bar.value = done;
+      bar.max = total;
+      document.getElementById("progressDone").textContent = done;
+      document.getElementById("progressTotal").textContent = total;
+    } else {
+      bar.classList.add("hidden");
+      document.getElementById("progressDone").textContent = "—";
+      document.getElementById("progressTotal").textContent = "—";
+    }
 
     // Progress table
     const progresses = d.progresses || [];
+    document.getElementById("progressEmpty").classList.add("hidden");
     if (progresses.length === 0) {
       document.getElementById("progressEmpty").classList.remove("hidden");
     } else {
       const rows = document.getElementById("progressRows");
+      rows.innerHTML = "";
       progresses.forEach((p) => {
         const tr = document.createElement("tr");
         tr.className = "hover";
