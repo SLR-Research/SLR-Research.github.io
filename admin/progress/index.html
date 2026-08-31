@@ -75,8 +75,17 @@
     <div class="card bg-base-100 border border-base-200">
       <div class="card-body">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h2 class="text-lg font-semibold">Aktivitas Terbaru</h2>
-          <div class="flex gap-2 items-center">
+          <div>
+            <h2 class="text-lg font-semibold">Aktivitas Terbaru</h2>
+            <p class="text-sm text-base-content/60" id="actSummary">—</p>
+          </div>
+          <div class="flex gap-2 items-center flex-wrap">
+            <select id="actPeriod" class="select select-sm select-bordered">
+              <option value="">Semua waktu</option>
+              <option value="today">Hari ini</option>
+              <option value="week">Minggu ini</option>
+              <option value="month">Bulan ini</option>
+            </select>
             <select id="actTrack" class="select select-sm select-bordered"></select>
             <label class="label cursor-pointer gap-2">
               <input type="checkbox" id="actCompleted" class="checkbox">
@@ -90,7 +99,7 @@
         </div>
         <div id="actEmpty" class="hidden text-center py-8">
           <span class="material-symbols-outlined text-4xl text-base-content/20 mb-2">history</span>
-          <p class="text-base-content/50">Belum ada aktivitas dengan filter ini.</p>
+          <p class="text-base-content/50" id="actEmptyMsg">Belum ada aktivitas dengan filter ini.</p>
         </div>
         <div id="actTableWrap" class="hidden overflow-x-auto">
           <table class="table table-sm">
@@ -99,6 +108,7 @@
             </thead>
             <tbody id="actRows"></tbody>
           </table>
+          <div id="actPager" class="hidden"></div>
         </div>
       </div>
     </div>
@@ -108,6 +118,7 @@
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ui.js"></script>
+<script src="/assets/js/pager.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
 <script>
 Auth.requireAdmin();
@@ -138,6 +149,46 @@ function fmtAbsolute(iso) {
 
 let TRACKS = [];   // corong per track dari backend
 let actBusy = false;
+let actPage = 1;
+
+const ACT_LIMIT = 20;
+
+// Batas periode dihitung di sini, bukan di server: server berjalan di UTC,
+// jadi "hari ini" versi server akan membuang aktivitas pukul 00:00-07:00 WIB.
+// Browser tahu zona waktu admin; hasilnya dikirim sebagai ISO ke backend.
+function sinceFor(period) {
+  if (!period) return "";
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  if (period === "today") return d.toISOString();
+  if (period === "week") {
+    // Pekan dimulai Senin: getDay() 0=Minggu, jadi digeser dulu.
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return d.toISOString();
+  }
+  if (period === "month") {
+    d.setDate(1);
+    return d.toISOString();
+  }
+  return "";
+}
+
+function activityParams() {
+  const p = new URLSearchParams();
+  const t = document.getElementById("actTrack").value;
+  if (t) p.set("track", t);
+  if (document.getElementById("actCompleted").checked) p.set("completed", "true");
+  const since = sinceFor(document.getElementById("actPeriod").value);
+  if (since) p.set("since", since);
+  p.set("limit", ACT_LIMIT);
+  if (actPage > 1) p.set("page", actPage);
+  return p;
+}
+
+function labelPeriode() {
+  const v = document.getElementById("actPeriod").value;
+  return { today: "hari ini", week: "minggu ini", month: "bulan ini" }[v] || "";
+}
 
 // ── Corong ──────────────────────────────────────────────────────────────
 function renderFunnel(track) {
@@ -213,6 +264,11 @@ function renderActivity(list) {
 
   empty.classList.toggle("hidden", list.length > 0);
   wrap.classList.toggle("hidden", list.length === 0);
+  if (list.length === 0) {
+    const per = labelPeriode();
+    document.getElementById("actEmptyMsg").textContent =
+      per ? `Tidak ada aktivitas ${per} dengan filter ini.` : "Belum ada aktivitas dengan filter ini.";
+  }
 
   list.forEach((a) => {
     const tr = document.createElement("tr");
@@ -258,14 +314,12 @@ async function load(firstRun) {
   actBusy = true;
   if (!firstRun) actLoading.classList.remove("hidden");
 
-  const params = new URLSearchParams();
-  const at = document.getElementById("actTrack").value;
-  if (at) params.set("track", at);
-  if (document.getElementById("actCompleted").checked) params.set("completed", "true");
-  const qs = params.toString();
+  const params = activityParams();
+  // Corong tidak perlu dihitung ulang saat hanya aktivitasnya yang berubah.
+  if (!firstRun) params.set("section", "activity");
 
   try {
-    const d = await Api.get("/admin/progress" + (qs ? "?" + qs : ""));
+    const d = await Api.get("/admin/progress?" + params.toString());
     document.getElementById("loading").classList.add("hidden");
     actLoading.classList.add("hidden");
     document.getElementById("content").classList.remove("hidden");
@@ -300,6 +354,15 @@ async function load(firstRun) {
     }
 
     renderActivity(d.activity || []);
+
+    const meta = d.activity_meta || {};
+    Pager.render(document.getElementById("actPager"), meta, (n) => {
+      actPage = n;
+      load(false);
+    });
+    const per = labelPeriode();
+    document.getElementById("actSummary").textContent =
+      (meta.total ?? 0) + " aktivitas" + (per ? " " + per : "");
   } catch (err) {
     document.getElementById("loading").classList.add("hidden");
     actLoading.classList.add("hidden");
@@ -311,8 +374,12 @@ async function load(firstRun) {
 }
 
 document.getElementById("funnelTrack").addEventListener("change", (e) => renderFunnel(e.target.value));
-document.getElementById("actTrack").addEventListener("change", () => load(false));
-document.getElementById("actCompleted").addEventListener("change", () => load(false));
+["actTrack", "actCompleted", "actPeriod"].forEach((id) => {
+  document.getElementById(id).addEventListener("change", () => {
+    actPage = 1;
+    load(false);
+  });
+});
 
 load(true);
 </script>
