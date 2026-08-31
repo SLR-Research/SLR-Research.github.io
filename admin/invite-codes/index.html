@@ -151,6 +151,57 @@
   <form method="dialog" class="modal-backdrop"><button>close</button></form>
 </dialog>
 
+<!-- Edit Modal -->
+<dialog id="editModal" class="modal">
+  <div class="modal-box max-w-md">
+    <h3 class="font-bold text-lg mb-1">Edit Invite Code</h3>
+    <p class="text-sm opacity-70 mb-4" id="editContext"></p>
+
+    <form id="editForm" class="space-y-3">
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Track <span class="text-error">*</span></span></label>
+        <select name="track" id="editTrack" class="select select-bordered" required></select>
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Code <span class="text-error">*</span></span></label>
+        <input type="text" name="code" id="editCode" class="input input-bordered font-mono uppercase" maxlength="32" required oninput="this.value=this.value.toUpperCase()">
+        <label class="label"><span class="label-text-alt text-warning">Mengubah kode membuat kode lama yang sudah terlanjur dibagikan tidak berlaku lagi.</span></label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Max Pemakaian</span></label>
+          <input type="number" name="max_uses" id="editMaxUses" class="input input-bordered" min="0">
+          <label class="label"><span class="label-text-alt text-base-content/50" id="editUsageHint"></span></label>
+        </div>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Trial Days</span></label>
+          <input type="number" name="trial_days" id="editTrialDays" class="input input-bordered" min="1" max="365" required>
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Expires <span class="text-base-content/50 text-xs">(kosongkan = tidak pernah expire)</span></span></label>
+        <input type="datetime-local" name="expires_at" id="editExpires" class="input input-bordered">
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Notes <span class="text-base-content/50 text-xs">(opsional)</span></span></label>
+        <input type="text" name="notes" id="editNotes" class="input input-bordered" placeholder="Misal: Kelas Metpen 2026A">
+      </div>
+
+      <div id="editError" class="hidden alert alert-error text-sm"></div>
+
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="document.getElementById('editModal').close()">Batal</button>
+        <button type="submit" id="editSaveBtn" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
 <!-- Code Detail Modal (untuk copy ke clipboard) -->
 <dialog id="codeDetailModal" class="modal">
   <div class="modal-box max-w-md">
@@ -236,6 +287,7 @@ async function loadCodes() {
         <td class="text-xs text-base-content/60" data-created></td>
         <td>
           <button class="btn btn-ghost btn-xs gap-1" data-copy title="Copy code"><span class="material-symbols-outlined" style="font-size:16px">content_copy</span></button>
+          <button class="btn btn-ghost btn-xs gap-1" data-edit title="Edit kode"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
           <button class="btn btn-ghost btn-xs gap-1" data-toggle><span class="material-symbols-outlined" style="font-size:16px"></span></button>
         </td>`;
       tr.querySelector("[data-code]").textContent = c.code;
@@ -254,6 +306,10 @@ async function loadCodes() {
         try { await navigator.clipboard.writeText(c.code); showSuccess("Code disalin: " + c.code); }
         catch { showError("Gagal copy clipboard"); }
       });
+
+      const editBtn = tr.querySelector("[data-edit]");
+      editBtn.setAttribute("aria-label", "Edit kode " + c.code);
+      editBtn.addEventListener("click", () => openEditModal(c));
 
       const toggleBtn = tr.querySelector("[data-toggle]");
       const toggleIcon = toggleBtn.querySelector(".material-symbols-outlined");
@@ -318,6 +374,90 @@ document.getElementById("createForm").addEventListener("submit", async (e) => {
   } finally {
     btn.disabled = false;
     btn.textContent = "Generate";
+  }
+});
+
+// ── Edit ────────────────────────────────────────────────────────────────
+// Opsi track di-clone dari form create supaya daftar track cuma ditulis
+// sekali di halaman ini.
+(function initEditTrackOptions() {
+  const src = document.querySelector('#createForm select[name="track"]');
+  const dst = document.getElementById("editTrack");
+  Array.from(src.options).forEach((o) => {
+    if (o.value) dst.appendChild(o.cloneNode(true));
+  });
+})();
+
+// datetime-local butuh "YYYY-MM-DDTHH:MM" waktu lokal, bukan ISO UTC.
+function toLocalInputValue(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+    "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+let _editingId = null;
+function openEditModal(c) {
+  _editingId = c.id;
+  document.getElementById("editContext").textContent =
+    "Dibuat " + fmtDateTime(c.created_at) + " · dipakai " + (c.used_count || 0) + "x";
+  // Kode dengan slug track yang tidak lagi ada di daftar (mis. track lama)
+  // tetap harus bisa diedit tanpa diam-diam berpindah track.
+  const trackSel = document.getElementById("editTrack");
+  trackSel.value = c.track;
+  if (trackSel.value !== c.track) {
+    const opt = document.createElement("option");
+    opt.value = c.track;
+    opt.textContent = trackLabel(c.track) + " (tidak dikenal)";
+    trackSel.appendChild(opt);
+    trackSel.value = c.track;
+  }
+  document.getElementById("editCode").value = c.code;
+  document.getElementById("editMaxUses").value = c.max_uses || 0;
+  document.getElementById("editTrialDays").value = c.trial_days || 7;
+  document.getElementById("editExpires").value = toLocalInputValue(c.expires_at);
+  document.getElementById("editNotes").value = c.notes || "";
+  document.getElementById("editUsageHint").textContent =
+    (c.used_count || 0) > 0
+      ? "0 = unlimited, atau minimal " + c.used_count
+      : "0 = unlimited";
+  document.getElementById("editError").classList.add("hidden");
+  document.getElementById("editModal").showModal();
+}
+
+document.getElementById("editForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!_editingId) return;
+  const fd = new FormData(e.target);
+  const errBox = document.getElementById("editError");
+  errBox.classList.add("hidden");
+
+  const exp = fd.get("expires_at");
+  const body = {
+    track: fd.get("track"),
+    code: (fd.get("code") || "").trim(),
+    notes: fd.get("notes") || "",
+    max_uses: parseInt(fd.get("max_uses") || "0", 10),
+    trial_days: parseInt(fd.get("trial_days") || "7", 10),
+    expires_at: exp ? new Date(exp).toISOString() : null,
+  };
+
+  const btn = document.getElementById("editSaveBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Menyimpan...';
+  try {
+    await Api.patch("/admin/invite-codes/" + encodeURIComponent(_editingId), body);
+    document.getElementById("editModal").close();
+    showSuccess("Perubahan tersimpan");
+    loadCodes();
+  } catch (err) {
+    errBox.textContent = err.message || "Gagal menyimpan perubahan";
+    errBox.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Simpan";
   }
 });
 
