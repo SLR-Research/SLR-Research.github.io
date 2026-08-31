@@ -36,18 +36,34 @@
 
   <div id="content" class="hidden space-y-6">
 
-    <!-- Module Stats -->
+    <!-- Corong per modul -->
     <div class="card bg-base-100 border border-base-200">
       <div class="card-body">
-        <h2 class="text-lg font-semibold mb-4">Statistik Per Modul</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-1">
+          <div>
+            <h2 class="text-lg font-semibold">Corong Modul</h2>
+            <p class="text-sm text-base-content/60" id="funnelSummary">—</p>
+          </div>
+          <select id="funnelTrack" class="select select-sm select-bordered"></select>
+        </div>
+        <p class="text-xs text-base-content/50 mb-4">
+          "Dibuka" = jumlah peserta yang pernah membuka modul itu, bukan jumlah kunjungan —
+          satu peserta dihitung sekali per modul.
+        </p>
         <div id="statsEmpty" class="hidden text-center py-8">
           <span class="material-symbols-outlined text-4xl text-base-content/20 mb-2">analytics</span>
-          <p class="text-base-content/50">Belum ada data progress.</p>
+          <p class="text-base-content/50">Belum ada peserta maupun progress di track manapun.</p>
         </div>
         <div id="statsTableWrap" class="hidden overflow-x-auto">
           <table class="table">
             <thead>
-              <tr><th scope="col">Track</th><th scope="col">Modul</th><th scope="col">Total Kunjungan</th><th scope="col">Diselesaikan</th><th scope="col">Tingkat Penyelesaian</th></tr>
+              <tr>
+                <th scope="col">Modul</th>
+                <th scope="col">Dibuka</th>
+                <th scope="col">Selesai</th>
+                <th scope="col">Selesai dari yang membuka</th>
+                <th scope="col">Jangkauan dari peserta</th>
+              </tr>
             </thead>
             <tbody id="statsRows"></tbody>
           </table>
@@ -55,13 +71,26 @@
       </div>
     </div>
 
-    <!-- Recent Activity -->
+    <!-- Aktivitas Terbaru -->
     <div class="card bg-base-100 border border-base-200">
       <div class="card-body">
-        <h2 class="text-lg font-semibold mb-4">Aktivitas Terbaru</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h2 class="text-lg font-semibold">Aktivitas Terbaru</h2>
+          <div class="flex gap-2 items-center">
+            <select id="actTrack" class="select select-sm select-bordered"></select>
+            <label class="label cursor-pointer gap-2">
+              <input type="checkbox" id="actCompleted" class="checkbox">
+              <span class="label-text text-sm">Hanya yang selesai</span>
+            </label>
+          </div>
+        </div>
+        <div id="actLoading" class="hidden space-y-2">
+          <div class="skeleton h-8 w-full"></div>
+          <div class="skeleton h-8 w-full"></div>
+        </div>
         <div id="actEmpty" class="hidden text-center py-8">
           <span class="material-symbols-outlined text-4xl text-base-content/20 mb-2">history</span>
-          <p class="text-base-content/50">Belum ada aktivitas.</p>
+          <p class="text-base-content/50">Belum ada aktivitas dengan filter ini.</p>
         </div>
         <div id="actTableWrap" class="hidden overflow-x-auto">
           <table class="table table-sm">
@@ -83,86 +112,209 @@
 <script>
 Auth.requireAdmin();
 
-function fmtDate(s) {
-  if (!s) return "—";
-  try { return new Date(s).toLocaleString("id-ID", {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch { return s; }
+// Waktu relatif lebih mudah dipindai di umpan aktivitas daripada tanggal
+// absolut; tanggal persisnya tetap ada di tooltip.
+function fmtRelative(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const menit = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (menit < 1) return "baru saja";
+  if (menit < 60) return menit + " menit lalu";
+  const jam = Math.floor(menit / 60);
+  if (jam < 24) return jam + " jam lalu";
+  const hari = Math.floor(jam / 24);
+  if (hari < 30) return hari + " hari lalu";
+  const bulan = Math.floor(hari / 30);
+  if (bulan < 12) return bulan + " bulan lalu";
+  return Math.floor(bulan / 12) + " tahun lalu";
 }
 
-(async function load() {
+function fmtAbsolute(iso) {
+  if (!iso) return "";
+  try { return new Date(iso).toLocaleString("id-ID", {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
+  catch (_) { return iso; }
+}
+
+let TRACKS = [];   // corong per track dari backend
+let actBusy = false;
+
+// ── Corong ──────────────────────────────────────────────────────────────
+function renderFunnel(track) {
+  const ts = TRACKS.find((t) => t.track === track);
+  const empty = document.getElementById("statsEmpty");
+  const wrap = document.getElementById("statsTableWrap");
+  const rows = document.getElementById("statsRows");
+  const summary = document.getElementById("funnelSummary");
+  rows.innerHTML = "";
+
+  if (!ts || ts.modules.length === 0) {
+    empty.classList.remove("hidden");
+    wrap.classList.add("hidden");
+    summary.textContent = "—";
+    return;
+  }
+  empty.classList.add("hidden");
+  wrap.classList.remove("hidden");
+  summary.textContent = `${ts.enrolled} peserta terdaftar · ${ts.modules.length} modul`;
+
+  // Titik jatuh terbesar: selisih pembuka terbanyak antara dua modul
+  // berurutan. Inilah yang dicari admin — di mana peserta berhenti.
+  let cliff = -1, cliffDrop = 0;
+  for (let i = 1; i < ts.modules.length; i++) {
+    const drop = ts.modules[i - 1].reached - ts.modules[i].reached;
+    if (drop > cliffDrop) { cliffDrop = drop; cliff = i; }
+  }
+
+  ts.modules.forEach((m, i) => {
+    const tr = document.createElement("tr");
+    tr.className = "hover";
+    tr.innerHTML = `
+      <td><div class="font-medium text-sm" data-title></div><div class="text-xs text-base-content/40 font-mono" data-slug></div></td>
+      <td data-reached></td>
+      <td data-completed></td>
+      <td><div class="flex items-center gap-2"><progress class="progress progress-primary w-20"></progress><span class="text-sm text-base-content/70" data-crate></span></div></td>
+      <td><div class="flex items-center gap-2"><progress class="progress w-24"></progress><span class="text-sm text-base-content/70" data-rrate></span></div></td>`;
+
+    const tds = tr.querySelectorAll("td");
+    tds[0].querySelector("[data-title]").textContent = m.title;
+    tds[0].querySelector("[data-slug]").textContent = m.slug;
+    if (i === cliff) {
+      const b = document.createElement("span");
+      b.className = "badge badge-sm badge-warning gap-1 mt-1";
+      b.textContent = "−" + cliffDrop + " peserta";
+      b.title = "Penurunan terbesar dibanding modul sebelumnya";
+      tds[0].appendChild(b);
+    }
+    tds[1].textContent = m.reached;
+    tds[2].textContent = m.completed;
+
+    const cbar = tds[3].querySelector("progress");
+    cbar.value = m.completion_rate; cbar.max = 100;
+    tds[3].querySelector("[data-crate]").textContent = m.reached ? m.completion_rate + "%" : "—";
+
+    const rbar = tds[4].querySelector("progress");
+    rbar.value = m.reach_rate; rbar.max = 100;
+    tds[4].querySelector("[data-rrate]").textContent = ts.enrolled ? m.reach_rate + "%" : "—";
+
+    // Modul yang belum tersentuh sama sekali diredupkan — ia tetap harus
+    // tampil, tapi bukan yang menarik perhatian.
+    if (m.reached === 0) tr.className += " opacity-50";
+    rows.appendChild(tr);
+  });
+}
+
+// ── Aktivitas ───────────────────────────────────────────────────────────
+function renderActivity(list) {
+  const empty = document.getElementById("actEmpty");
+  const wrap = document.getElementById("actTableWrap");
+  const rows = document.getElementById("actRows");
+  rows.innerHTML = "";
+
+  empty.classList.toggle("hidden", list.length > 0);
+  wrap.classList.toggle("hidden", list.length === 0);
+
+  list.forEach((a) => {
+    const tr = document.createElement("tr");
+    tr.className = "hover";
+    tr.innerHTML = `
+      <td><a class="font-medium text-sm hover:text-primary" data-name></a><div class="text-xs text-base-content/50" data-email></div></td>
+      <td class="text-xs" data-track></td>
+      <td class="text-sm" data-modul></td>
+      <td><span class="badge badge-sm gap-1" data-status></span></td>
+      <td class="text-base-content/60 text-xs" data-time></td>`;
+
+    const link = tr.querySelector("[data-name]");
+    link.href = "/admin/users-detail/?id=" + encodeURIComponent(a.user_id);
+    link.textContent = a.user_name || "—";
+    tr.querySelector("[data-email]").textContent = a.user_email || "";
+    tr.querySelector("[data-track]").textContent = a.track_title || a.track;
+    const modul = tr.querySelector("[data-modul]");
+    modul.textContent = a.module_title || a.module_slug;
+    modul.title = a.module_slug;
+
+    const b = tr.querySelector("[data-status]");
+    if (a.completed) {
+      b.className += " badge-success";
+      b.textContent = "Selesai";
+    } else {
+      b.className += " badge-ghost";
+      b.textContent = "Dikunjungi";
+    }
+
+    const t = tr.querySelector("[data-time]");
+    t.textContent = fmtRelative(a.last_visited);
+    t.title = fmtAbsolute(a.last_visited);
+
+    rows.appendChild(tr);
+  });
+}
+
+// ── Muat ────────────────────────────────────────────────────────────────
+async function load(firstRun) {
   const errBox = document.getElementById("errorState");
+  const actLoading = document.getElementById("actLoading");
+  if (actBusy) return;
+  actBusy = true;
+  if (!firstRun) actLoading.classList.remove("hidden");
+
+  const params = new URLSearchParams();
+  const at = document.getElementById("actTrack").value;
+  if (at) params.set("track", at);
+  if (document.getElementById("actCompleted").checked) params.set("completed", "true");
+  const qs = params.toString();
+
   try {
-    const d = await Api.get("/admin/progress");
+    const d = await Api.get("/admin/progress" + (qs ? "?" + qs : ""));
     document.getElementById("loading").classList.add("hidden");
+    actLoading.classList.add("hidden");
     document.getElementById("content").classList.remove("hidden");
+    errBox.classList.add("hidden");
 
-    // Module stats
-    const stats = d.module_stats || [];
-    if (stats.length === 0) {
-      document.getElementById("statsEmpty").classList.remove("hidden");
-    } else {
-      const rows = document.getElementById("statsRows");
-      stats.forEach((s) => {
-        const tr = document.createElement("tr");
-        tr.className = "hover";
-        tr.innerHTML = `
-          <td class="text-xs"></td>
-          <td class="font-medium"></td>
-          <td></td>
-          <td></td>
-          <td><div class="flex items-center gap-2"><progress class="progress progress-primary w-24"></progress><span class="text-sm text-base-content/70"></span></div></td>`;
-        const tds = tr.querySelectorAll("td");
-        tds[0].textContent = s.track;
-        tds[1].textContent = s.slug;
-        tds[2].textContent = s.total_visits;
-        tds[3].textContent = s.completions;
-        tds[4].querySelector("progress").value = s.rate;
-        tds[4].querySelector("progress").max = 100;
-        tds[4].querySelector("span").textContent = s.rate + "%";
-        rows.appendChild(tr);
+    if (firstRun) {
+      TRACKS = d.tracks || [];
+      const funnelSel = document.getElementById("funnelTrack");
+      const actSel = document.getElementById("actTrack");
+      funnelSel.innerHTML = "";
+      TRACKS.forEach((t) => {
+        const o = document.createElement("option");
+        o.value = t.track;
+        o.textContent = `${t.title} (${t.enrolled} peserta)`;
+        funnelSel.appendChild(o);
       });
-      document.getElementById("statsTableWrap").classList.remove("hidden");
+      // Track dengan peserta terbanyak yang paling mungkin dilihat duluan.
+      const teratas = TRACKS.slice().sort((a, b) => b.enrolled - a.enrolled)[0];
+      if (teratas) funnelSel.value = teratas.track;
+      renderFunnel(funnelSel.value);
+
+      const semua = document.createElement("option");
+      semua.value = "";
+      semua.textContent = "Semua track";
+      actSel.appendChild(semua);
+      TRACKS.forEach((t) => {
+        const o = document.createElement("option");
+        o.value = t.track;
+        o.textContent = t.title;
+        actSel.appendChild(o);
+      });
     }
 
-    // Activity
-    const acts = d.activity || [];
-    if (acts.length === 0) {
-      document.getElementById("actEmpty").classList.remove("hidden");
-    } else {
-      const rows = document.getElementById("actRows");
-      acts.forEach((a) => {
-        const tr = document.createElement("tr");
-        tr.className = "hover";
-        tr.innerHTML = `
-          <td><div><p class="font-medium text-sm"></p><p class="text-xs text-base-content/50"></p></div></td>
-          <td class="text-xs"></td>
-          <td class="text-sm"></td>
-          <td><span class="badge badge-sm gap-1"></span></td>
-          <td class="text-base-content/60 text-xs"></td>`;
-        const tds = tr.querySelectorAll("td");
-        tds[0].querySelector("p:nth-child(1)").textContent = a.user_name || "—";
-        tds[0].querySelector("p:nth-child(2)").textContent = a.user_email || "";
-        tds[1].textContent = a.track;
-        tds[2].textContent = a.module_slug;
-        const b = tds[3].querySelector(".badge");
-        if (a.completed) {
-          b.className += " badge-success";
-          b.innerHTML = `<span class="material-symbols-outlined" style="font-size:12px">check</span>`;
-          b.appendChild(document.createTextNode(" Selesai"));
-        } else {
-          b.className += " badge-ghost";
-          b.textContent = "Dikunjungi";
-        }
-        tds[4].textContent = fmtDate(a.last_visited);
-        rows.appendChild(tr);
-      });
-      document.getElementById("actTableWrap").classList.remove("hidden");
-    }
+    renderActivity(d.activity || []);
   } catch (err) {
     document.getElementById("loading").classList.add("hidden");
+    actLoading.classList.add("hidden");
     errBox.textContent = err.status === 403 ? "Akses admin diperlukan" : (err.message || "Gagal memuat data");
     errBox.classList.remove("hidden");
+  } finally {
+    actBusy = false;
   }
-})();
+}
+
+document.getElementById("funnelTrack").addEventListener("change", (e) => renderFunnel(e.target.value));
+document.getElementById("actTrack").addEventListener("change", () => load(false));
+document.getElementById("actCompleted").addEventListener("change", () => load(false));
+
+load(true);
 </script>
 </body>
 </html>
