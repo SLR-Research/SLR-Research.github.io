@@ -93,9 +93,12 @@
     <p class="text-sm opacity-70 mb-4" id="trialContext"></p>
 
     <div class="form-control">
-      <label class="label"><span class="label-text font-medium">Durasi Trial (hari)</span></label>
-      <input id="trialDays" type="number" class="input input-bordered" value="7" min="1" max="365">
-      <label class="label"><span class="label-text-alt text-base-content/50">TrialEndsAt akan di-set ke now + N hari</span></label>
+      <label class="label"><span class="label-text font-medium">Durasi Trial</span></label>
+      <div class="flex gap-2">
+        <input id="trialValue" type="number" class="input input-bordered w-full" value="7" min="1">
+        <select id="trialUnit" class="select select-bordered"></select>
+      </div>
+      <label class="label"><span class="label-text-alt text-base-content/50">TrialEndsAt di-set ke sekarang + durasi ini <span id="trialHint"></span></span></label>
     </div>
 
     <div class="modal-action">
@@ -110,6 +113,7 @@
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ui.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
+<script src="/assets/js/duration.js"></script>
 <script>
 Auth.requireProfile();
 const u = Auth.getUser() || {};
@@ -280,22 +284,27 @@ async function loadEnrollments() {
   }
 }
 
+const syncTrial = Duration.wireTrialInput("trialValue", "trialUnit", "trialHint");
+
 let _activeTrialEnrollId = null;
 function openTrialModal(e) {
   _activeTrialEnrollId = e.id;
   document.getElementById("trialContext").textContent =
     `${e.user_email} → track ${trackLabel(e.track)}`;
-  document.getElementById("trialDays").value = "7";
+  // Extend: mulai dari sisa durasi kode/trial berjalan tidak relevan — backend
+  // selalu reset ke sekarang + N, jadi default balik ke 7 hari.
+  Duration.set("trialValue", "trialUnit", 7);
+  syncTrial();
   document.getElementById("trialModal").showModal();
 }
 
 document.getElementById("confirmTrialBtn").addEventListener("click", async () => {
-  const days = parseInt(document.getElementById("trialDays").value, 10) || 7;
+  const days = Duration.toDays(document.getElementById("trialValue").value, document.getElementById("trialUnit").value) || 7;
   if (!_activeTrialEnrollId) return;
   try {
     await Api.post(`/admin/enrollments/${_activeTrialEnrollId}/set-trial`, { days });
     document.getElementById("trialModal").close();
-    showSuccess(`Trial di-set ${days} hari`);
+    showSuccess(`Trial di-set ${Duration.label(days)}`);
     loadEnrollments();
   } catch (err) {
     showError("Gagal set trial: " + err.message);

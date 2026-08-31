@@ -78,7 +78,7 @@
               <th scope="col">Track</th>
               <th scope="col">Status</th>
               <th scope="col">Pemakaian</th>
-              <th scope="col">Trial Days</th>
+              <th scope="col">Durasi Trial</th>
               <th scope="col">Expires</th>
               <th scope="col">Notes</th>
               <th scope="col">Dibuat</th>
@@ -125,8 +125,12 @@
           <input type="number" name="max_uses" class="input input-bordered" placeholder="0 = unlimited" min="0" value="0">
         </div>
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Trial Days</span></label>
-          <input type="number" name="trial_days" class="input input-bordered" placeholder="7" min="1" max="365" value="7">
+          <label class="label"><span class="label-text font-medium">Durasi Trial</span></label>
+          <div class="flex gap-2">
+            <input type="number" name="trial_value" id="createTrialValue" class="input input-bordered w-full" min="1" value="7" required>
+            <select name="trial_unit" id="createTrialUnit" class="select select-bordered"></select>
+          </div>
+          <label class="label"><span class="label-text-alt text-base-content/50" id="createTrialHint"></span></label>
         </div>
       </div>
 
@@ -176,8 +180,12 @@
           <label class="label"><span class="label-text-alt text-base-content/50" id="editUsageHint"></span></label>
         </div>
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Trial Days</span></label>
-          <input type="number" name="trial_days" id="editTrialDays" class="input input-bordered" min="1" max="365" required>
+          <label class="label"><span class="label-text font-medium">Durasi Trial</span></label>
+          <div class="flex gap-2">
+            <input type="number" name="trial_value" id="editTrialValue" class="input input-bordered w-full" min="1" required>
+            <select name="trial_unit" id="editTrialUnit" class="select select-bordered"></select>
+          </div>
+          <label class="label"><span class="label-text-alt text-base-content/50" id="editTrialHint"></span></label>
         </div>
       </div>
 
@@ -225,6 +233,7 @@
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ui.js"></script>
 <script src="/assets/js/admin-nav.js"></script>
+<script src="/assets/js/duration.js"></script>
 <script>
 Auth.requireProfile();
 const u = Auth.getUser() || {};
@@ -296,7 +305,9 @@ async function loadCodes() {
       statusBadge.textContent = c.is_active ? "Aktif" : "Nonaktif";
       statusBadge.className += " " + (c.is_active ? "badge-success" : "badge-error");
       tr.querySelector("[data-usage]").textContent = usage + (c.max_uses === 0 ? " (unlimited)" : "");
-      tr.querySelector("[data-days]").textContent = (c.trial_days || 7) + " hari";
+      const daysCell = tr.querySelector("[data-days]");
+      daysCell.textContent = Duration.label(c.trial_days || 7);
+      daysCell.title = (c.trial_days || 7) + " hari";
       tr.querySelector("[data-expires]").textContent = c.expires_at ? fmtDate(c.expires_at) : "—";
       tr.querySelector("[data-notes]").textContent = c.notes || "—";
       tr.querySelector("[data-created]").textContent = fmtDateTime(c.created_at);
@@ -350,7 +361,7 @@ document.getElementById("createForm").addEventListener("submit", async (e) => {
     code: (fd.get("code") || "").trim(),
     notes: fd.get("notes") || "",
     max_uses: parseInt(fd.get("max_uses") || "0", 10),
-    trial_days: parseInt(fd.get("trial_days") || "7", 10),
+    trial_days: Duration.toDays(fd.get("trial_value") || 7, fd.get("trial_unit")),
   };
   const exp = fd.get("expires_at");
   if (exp) body.expires_at = new Date(exp).toISOString();
@@ -362,6 +373,8 @@ document.getElementById("createForm").addEventListener("submit", async (e) => {
     const res = await Api.post("/admin/invite-codes", body);
     document.getElementById("createModal").close();
     e.target.reset();
+    Duration.set("createTrialValue", "createTrialUnit", 7);
+    syncCreateTrial();
 
     // Show generated code modal
     const newCode = res.invite_code?.code || "";
@@ -398,6 +411,9 @@ function toLocalInputValue(iso) {
     "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
 }
 
+const syncCreateTrial = Duration.wireTrialInput("createTrialValue", "createTrialUnit", "createTrialHint");
+const syncEditTrial = Duration.wireTrialInput("editTrialValue", "editTrialUnit", "editTrialHint");
+
 let _editingId = null;
 function openEditModal(c) {
   _editingId = c.id;
@@ -416,7 +432,8 @@ function openEditModal(c) {
   }
   document.getElementById("editCode").value = c.code;
   document.getElementById("editMaxUses").value = c.max_uses || 0;
-  document.getElementById("editTrialDays").value = c.trial_days || 7;
+  Duration.set("editTrialValue", "editTrialUnit", c.trial_days || 7);
+  syncEditTrial();
   document.getElementById("editExpires").value = toLocalInputValue(c.expires_at);
   document.getElementById("editNotes").value = c.notes || "";
   document.getElementById("editUsageHint").textContent =
@@ -440,7 +457,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     code: (fd.get("code") || "").trim(),
     notes: fd.get("notes") || "",
     max_uses: parseInt(fd.get("max_uses") || "0", 10),
-    trial_days: parseInt(fd.get("trial_days") || "7", 10),
+    trial_days: Duration.toDays(fd.get("trial_value") || 7, fd.get("trial_unit")),
     expires_at: exp ? new Date(exp).toISOString() : null,
   };
 
